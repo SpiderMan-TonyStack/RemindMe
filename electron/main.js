@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const { Store, REPEAT_NONE } = require('./store');
 const { makeAppIcon, makeTrayIcon } = require('./icon');
+const { webdavPut, webdavGet, webdavTest } = require('./webdav');
 
 // 图片附件自定义协议:渲染层用 remindme-img://<filename> 加载本地附件
 protocol.registerSchemesAsPrivileged([
@@ -314,6 +315,51 @@ function registerIpc() {
       return { ok: true, ...r };
     } catch (e) {
       return { ok: false, error: '文件解析失败:' + e.message };
+    }
+  });
+
+  // ---------- WebDAV 云端同步 ----------
+  function wdCfg(cfg) {
+    const s = store.getSettings();
+    const saved = s.webdav || {};
+    return { url: (cfg && cfg.url) || saved.url || '', user: (cfg && cfg.user) || saved.user || '', pass: (cfg && cfg.pass) || saved.pass || '' };
+  }
+  ipcMain.handle('webdav:test', async (_e, cfg) => {
+    const c = wdCfg(cfg);
+    if (!c.url) return { ok: false, error: '请先填写服务器地址' };
+    return webdavTest(c.url, c.user, c.pass);
+  });
+  ipcMain.handle('webdav:upload', async (_e, cfg) => {
+    const c = wdCfg(cfg);
+    if (!c.url) return { ok: false, error: '请先填写服务器地址' };
+    try {
+      const s = store.getSettings();
+      const payload = JSON.stringify({
+        memos: store.listMemos(),
+        settings: s,
+        nextId: store.data.nextId,
+        history: store.getHistory(100),
+      }, null, 2);
+      const r = await webdavPut(c.url, c.user, c.pass, payload);
+      store.setSettings({ webdav: { url: c.url, user: c.user, pass: c.pass } });
+      return { ok: true, target: r.target };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+  ipcMain.handle('webdav:download', async (_e, cfg) => {
+    const c = wdCfg(cfg);
+    if (!c.url) return { ok: false, error: '请先填写服务器地址' };
+    try {
+      const r = await webdavGet(c.url, c.user, c.pass);
+      const parsed = JSON.parse(r.data);
+      store.backup(); // 下载前自动备份本地
+      const imp = store.importData(parsed, 'replace');
+      if (imp.error) return { ok: false, error: imp.error };
+      store.setSettings({ webdav: { url: c.url, user: c.user, pass: c.pass } });
+      return { ok: true, added: imp.added };
+    } catch (e) {
+      return { ok: false, error: '下载失败:' + e.message };
     }
   });
 }

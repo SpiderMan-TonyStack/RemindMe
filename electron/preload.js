@@ -38,6 +38,10 @@ contextBridge.exposeInMainWorld('remindme', {
   // 导出/导入
   exportData: (format) => ipcRenderer.invoke('data:export', format),
   importData: (mode) => ipcRenderer.invoke('data:import', mode),
+  // WebDAV 云端同步
+  webdavTest: (cfg) => ipcRenderer.invoke('webdav:test', cfg),
+  webdavUpload: (cfg) => ipcRenderer.invoke('webdav:upload', cfg),
+  webdavDownload: (cfg) => ipcRenderer.invoke('webdav:download', cfg),
   setTrayTip: (tip) => ipcRenderer.send('tray:set-tip', tip),
 
   // 事件

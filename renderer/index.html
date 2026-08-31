@@ -136,6 +136,20 @@
         </div>
       </div>
       <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
+        <label>云端同步(WebDAV)</label>
+        <input id="wd-url" class="wd-input" placeholder="服务器地址,如 https://dav.jianguoyun.com/dav/remindme/">
+        <div style="display:flex;gap:8px">
+          <input id="wd-user" class="wd-input" placeholder="账号" style="flex:1">
+          <input id="wd-pass" type="password" class="wd-input" placeholder="密码" style="flex:1">
+        </div>
+        <div class="export-btns">
+          <button id="wd-test" class="btn-mini">🔌 测试连接</button>
+          <button id="wd-upload" class="btn-mini">⬆ 上传备份</button>
+          <button id="wd-download" class="btn-mini">⬇ 下载恢复</button>
+        </div>
+        <span class="muted">上传:本地数据推送到云端 · 下载:云端数据覆盖本地(下载前自动备份本地)</span>
+      </div>
+      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
         <label>最近提醒</label>
         <div id="reminder-history" class="history-box">
           <span class="muted">暂无提醒记录</span>
@@ -159,7 +173,7 @@
       </div>
     </div>
     <div class="modal-foot">
-      <span>RemindMe v1.0.0 · 极简备忘,到点提醒</span>
+      <span>RemindMe v1.1.0 · 极简备忘,到点提醒</span>
     </div>
   </div>
 </div>

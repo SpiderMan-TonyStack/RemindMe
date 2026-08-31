@@ -70,6 +70,9 @@ async function load() {
   $('#set-advance').value = String(settings.defaultAdvance);
   $('#set-defaulttime').value = settings.defaultTime;
   $('#set-sound').value = settings.sound || 'clear';
+  $('#wd-url').value = (settings.webdav && settings.webdav.url) || '';
+  $('#wd-user').value = (settings.webdav && settings.webdav.user) || '';
+  $('#wd-pass').value = (settings.webdav && settings.webdav.pass) || '';
   syncQuickAddDefaultTime();
   updateTrayTip();
   loadReminderHistory();
@@ -890,6 +893,31 @@ function bindEvents() {
         toast('导入失败:' + (r.error || '未知错误'));
       }
     });
+  });
+
+  // WebDAV 云端同步
+  const wdCfg = () => ({
+    url: $('#wd-url').value.trim(),
+    user: $('#wd-user').value.trim(),
+    pass: $('#wd-pass').value,
+  });
+  $('#wd-test').addEventListener('click', async () => {
+    const r = await api.webdavTest(wdCfg());
+    if (!r.ok) { toast('连接失败:' + (r.error || '')); return; }
+    toast(r.reachable ? '连接成功,云端已有备份文件' : '连接成功(云端暂无备份,可直接上传)');
+  });
+  $('#wd-upload').addEventListener('click', async () => {
+    const r = await api.webdavUpload(wdCfg());
+    if (!r.ok) { toast('上传失败:' + (r.error || '')); return; }
+    toast('已上传到云端:' + (r.target || ''));
+    state.settings = await api.getSettings();
+  });
+  $('#wd-download').addEventListener('click', async () => {
+    if (!window.confirm('下载将用云端数据覆盖本地全部备忘(本地已自动备份),确定继续吗?')) return;
+    const r = await api.webdavDownload(wdCfg());
+    if (!r.ok) { toast('下载失败:' + (r.error || '')); return; }
+    toast(`已从云端恢复 ${r.added} 条备忘`);
+    await load();
   });
 
   // 全局:隐藏右键菜单

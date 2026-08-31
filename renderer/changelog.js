@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '1.1.0',
+    date: '2026-08-31',
+    changes: [
+      '新增云端同步(WebDAV):设置中配置服务器地址/账号/密码,一键「上传备份」到网盘或「下载恢复」到本机(下载前自动备份),支持测试连接',
+    ],
+  },
+  {
     version: '1.0.0',
     date: '2026-08-31',
     changes: [
