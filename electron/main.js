@@ -523,8 +523,10 @@ if (process.env.REMINDME_SMOKE === '1') {
               const fullySelected = selStart === 0 && selEnd === (input ? input.value.length : 0);
               const contentEl = document.querySelector('#edit-content');
               const contentTag = contentEl ? contentEl.tagName.toLowerCase() : '';
+              const hasAddImg = !!document.querySelector('#edit-add-img');
+              const hasImgBox = !!document.querySelector('#edit-images');
               document.querySelector('#edit-cancel').click();
-              return { open, selectable, focused, fullySelected, hasContent: contentTag === 'textarea', value: input ? input.value.slice(0, 14) : '' };
+              return { open, selectable, focused, fullySelected, hasContent: contentTag === 'textarea', hasAddImg, hasImgBox, value: input ? input.value.slice(0, 14) : '' };
             })(),
           });
         })()`);
@@ -537,7 +539,7 @@ if (process.env.REMINDME_SMOKE === '1') {
         console.log('[smoke] calendar: cells=' + parsed.calendar.cells, '| today=' + parsed.calendar.hasToday, '| dows=' + parsed.calendar.dows, '| cellH=' + parsed.calendar.cellH, '| overflowX=' + parsed.calendar.overflowX, '| dayListVisible=' + parsed.calendar.listVisible);
         console.log('[smoke] search: highlights=' + parsed.search.highlights, '| ctrlF=' + parsed.search.ctrlF);
         console.log('[smoke] accent applied:', parsed.accent);
-        console.log('[smoke] edit: open=' + parsed.edit.open, '| selectable=' + parsed.edit.selectable, '| focused=' + parsed.edit.focused, '| fullySel=' + parsed.edit.fullySelected, '| hasContent=' + parsed.edit.hasContent, '| val=' + (parsed.edit.value || ''));
+        console.log('[smoke] edit: open=' + parsed.edit.open, '| selectable=' + parsed.edit.selectable, '| focused=' + parsed.edit.focused, '| fullySel=' + parsed.edit.fullySelected, '| hasContent=' + parsed.edit.hasContent, '| addImg=' + parsed.edit.hasAddImg, '| imgBox=' + parsed.edit.hasImgBox, '| val=' + (parsed.edit.value || ''));
         const pass = parsed.memoNodes === 3 && parsed.overdue === 1 && parsed.stat.includes('3')
           && parsed.changelog.open && parsed.changelog.items >= 3 && parsed.changelog.closed
           && parsed.stats.total === '3' && parsed.stats.todo === '3' && parsed.stats.repeat === '1'
@@ -547,7 +549,7 @@ if (process.env.REMINDME_SMOKE === '1') {
           && parsed.search.highlights >= 3 && parsed.search.ctrlF
           && parsed.accent === 'violet'
           && parsed.edit.open && parsed.edit.selectable && parsed.edit.focused && parsed.edit.fullySelected
-          && parsed.edit.hasContent;
+          && parsed.edit.hasContent && parsed.edit.hasAddImg && parsed.edit.hasImgBox;
         console.log(pass ? '[smoke] OK' : '[smoke] FAIL: 渲染结果不符合预期');
         app.exit(pass ? 0 : 1);
       } catch (e) {

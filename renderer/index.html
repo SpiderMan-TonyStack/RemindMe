@@ -184,7 +184,7 @@
       </div>
     </div>
     <div class="modal-foot">
-      <span>RemindMe v1.3.0 · 极简备忘,到点提醒</span>
+      <span>RemindMe v1.4.0 · 极简备忘,到点提醒</span>
     </div>
   </div>
 </div>
@@ -204,6 +204,11 @@
       <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:6px">
         <label>内容(可选)</label>
         <textarea id="edit-content" rows="4" maxlength="2000" placeholder="补充说明、详细备注..." style="background:var(--card-2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:8px 10px;outline:none;font-family:inherit;font-size:13px;resize:vertical;min-height:80px"></textarea>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button id="edit-add-img" class="btn-mini">🖼 添加图片</button>
+          <span class="muted">图片与内容一同保存</span>
+        </div>
+        <div id="edit-images" class="edit-imgs"></div>
       </div>
       <div class="setting-row">
         <label>时间</label>

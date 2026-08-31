@@ -452,6 +452,21 @@ body[data-theme="light"] .stat-item b { color: var(--accent); }
 }
 .wd-input:focus { border-color: var(--accent); }
 
+/* 编辑弹窗图片管理 */
+.edit-imgs { display: flex; flex-wrap: wrap; gap: 8px; min-height: 24px; }
+.edit-img {
+  position: relative; width: 72px; height: 72px; border-radius: 8px;
+  border: 1px solid var(--border); overflow: hidden; flex-shrink: 0;
+}
+.edit-img img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+.edit-img-del {
+  position: absolute; top: 3px; right: 3px; width: 18px; height: 18px;
+  border-radius: 50%; border: none; background: rgba(0,0,0,.65); color: #fff;
+  font-size: 11px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.edit-img-del:hover { background: var(--danger); }
+.edit-imgs img:not(.no-zoom):hover { filter: brightness(.92); }
+
 /* 日历视图 */
 .cal-bar {
   display: flex; align-items: center; gap: 10px;

@@ -446,10 +446,35 @@ function openEdit(id) {
   $('#edit-advance').value = String(m.advance_minutes || 0);
   $('#edit-pinned').checked = !!m.pinned;
   $('#edit-modal').classList.remove('hidden');
+  renderEditImages(m.images);
   // 弹窗打开后立即聚焦标题输入框并全选,用户可直接覆盖输入
   const el = $('#edit-title');
   el.focus();
   try { el.setSelectionRange(0, el.value.length); } catch (e) { /* input 类型不支持时忽略 */ }
+}
+
+/** 渲染编辑弹窗内的图片列表(可删除) */
+function renderEditImages(imgs) {
+  const box = $('#edit-images');
+  if (!box) return;
+  const list = imgs || [];
+  if (!list.length) {
+    box.innerHTML = '<span class="muted">暂无图片</span>';
+    return;
+  }
+  box.innerHTML = list.map((n) => `
+    <div class="edit-img">
+      <img src="${IMG_URL(n)}" data-img="${escAttr(n)}" alt="">
+      <button class="edit-img-del" data-name="${escAttr(n)}" title="删除图片">✕</button>
+    </div>`).join('');
+}
+
+/** 添加/删除图片后从存储刷新编辑弹窗的图片区 */
+async function refreshEditImages() {
+  if (!state_edit.id) return;
+  const memos = await api.list();
+  const m = memos.find((x) => x.id === state_edit.id);
+  if (m) renderEditImages(m.images);
 }
 
 function closeEdit() {
@@ -814,6 +839,24 @@ function bindEvents() {
   });
   $('#edit-title').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
+  });
+
+  // 编辑弹窗:添加图片
+  $('#edit-add-img').addEventListener('click', async () => {
+    if (!state_edit.id) return;
+    const r = await api.pickImages();
+    if (!r || !r.ok || !r.images || !r.images.length) return;
+    await api.addImages(state_edit.id, r.images.map((i) => i.name));
+    toast('图片已添加');
+    await refreshEditImages();
+  });
+  // 编辑弹窗:删除图片(事件委托)
+  $('#edit-images').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.edit-img-del');
+    if (!btn || !state_edit.id) return;
+    await api.removeImage(state_edit.id, btn.dataset.name);
+    toast('图片已删除');
+    await refreshEditImages();
   });
 
   // 批量操作(清空已完成 / 清空回收站)

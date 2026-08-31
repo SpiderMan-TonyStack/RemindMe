@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '1.4.0',
+    date: '2026-08-31',
+    changes: [
+      '编辑备忘支持添加/删除图片:内容区下方「🖼 添加图片」选图即存,缩略图可单独删除,与内容一同保存展示',
+    ],
+  },
+  {
     version: '1.3.0',
     date: '2026-08-31',
     changes: [
