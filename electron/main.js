@@ -392,6 +392,19 @@ if (process.env.REMINDME_SMOKE === '1') {
               document.querySelector('#modal-close').click();
               return s;
             })(),
+            // 日历视图:切换 → 网格存在(≥28 格) + 今天高亮 + 点击选中日期
+            calendar: (() => {
+              document.querySelector('.view-btn[data-view="calendar"]').click();
+              const cells = document.querySelectorAll('.cal-cell[data-day]').length;
+              const today = document.querySelector('.cal-cell.today');
+              const title = document.querySelector('.cal-title').textContent;
+              // 点击今天 → 高亮选中
+              if (today) today.click();
+              const sel = document.querySelectorAll('.cal-cell.sel').length;
+              const dayList = document.querySelectorAll('.cal-memo-head').length;
+              document.querySelector('.view-btn[data-view="all"]').click();
+              return { cells, hasToday: !!today, title, sel, dayList };
+            })(),
           });
         })()`);
         const parsed = JSON.parse(info);
@@ -400,9 +413,11 @@ if (process.env.REMINDME_SMOKE === '1') {
         console.log('[smoke] stat:', parsed.stat, '| trashEmpty:', parsed.trashEmpty);
         console.log('[smoke] changelog: open=' + parsed.changelog.open, '| items=' + parsed.changelog.items, '| closed=' + parsed.changelog.closed);
         console.log('[smoke] stats: total=' + parsed.stats.total, '| todo=' + parsed.stats.todo, '| repeat=' + parsed.stats.repeat, '| trash=' + parsed.stats.trash);
+        console.log('[smoke] calendar: cells=' + parsed.calendar.cells, '| today=' + parsed.calendar.hasToday, '| sel=' + parsed.calendar.sel, '| dayList=' + parsed.calendar.dayList);
         const pass = parsed.memoNodes === 3 && parsed.overdue === 1 && parsed.stat.includes('3')
           && parsed.changelog.open && parsed.changelog.items >= 3 && parsed.changelog.closed
-          && parsed.stats.total === '3' && parsed.stats.todo === '3' && parsed.stats.repeat === '1';
+          && parsed.stats.total === '3' && parsed.stats.todo === '3' && parsed.stats.repeat === '1'
+          && parsed.calendar.cells >= 28 && parsed.calendar.hasToday && parsed.calendar.sel >= 1 && parsed.calendar.dayList === 1;
         console.log(pass ? '[smoke] OK' : '[smoke] FAIL: 渲染结果不符合预期');
         app.exit(pass ? 0 : 1);
       } catch (e) {

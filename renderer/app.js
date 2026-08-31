@@ -13,12 +13,15 @@ const DAY = 24 * 60 * 60 * 1000;
 const state = {
   memos: [],
   settings: null,
-  view: 'all',      // all | today | todo | done | trash
+  view: 'all',      // all | today | todo | calendar | done | trash
   search: '',
   ctxMemoId: null,
   pendingImages: [],  // 快速添加待保存的图片文件名
   lbMemoId: null,     // 大图查看所属备忘 id
   lbName: '',         // 大图当前文件名
+  calYear: 0,         // 日历视图:显示年月
+  calMonth: -1,       // 0-11
+  calDate: '',        // 选中日期 'YYYY-MM-DD'
 };
 
 // 非 standard 自定义协议:URL 用 remindme-img:<文件名> 形式(避免 // 被解析为 host)
@@ -94,6 +97,108 @@ function updateStats() {
   set('stat-trash', memos.filter((m) => m.deleted).length);
 }
 
+// ---------- 日历视图 ----------
+function dateKey(ms) {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function memosOfDay(dateKeyStr) {
+  return state.memos.filter((m) => !m.deleted && dateKey(m.due_at) === dateKeyStr);
+}
+
+function fmtDayTitle(key) {
+  const d = new Date(key + 'T00:00:00');
+  const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+  return `${d.getMonth() + 1}月${d.getDate()}日 周${week}`;
+}
+
+function renderCalendar() {
+  const el = $('#list');
+  const empty = $('#empty');
+  empty.classList.add('hidden');
+  $('#list-actions').classList.add('hidden');
+
+  const now = new Date();
+  const todayKey = dateKey(now.getTime());
+  // 首次进入:定位到当前月/今天
+  if (state.calMonth === -1) state.calMonth = now.getMonth();
+  if (!state.calYear) state.calYear = now.getFullYear();
+  if (!state.calDate) state.calDate = todayKey;
+  const y = state.calYear, m = state.calMonth;
+
+  const first = new Date(y, m, 1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  // 每天备忘数 + 过期标记(未完成)
+  const counts = {};
+  const overdueDays = new Set();
+  const nowMs = Date.now();
+  for (const memo of state.memos) {
+    if (memo.deleted || memo.done) continue;
+    const k = dateKey(memo.due_at);
+    counts[k] = (counts[k] || 0) + 1;
+    if (memo.due_at < nowMs) overdueDays.add(k);
+  }
+
+  let html = `
+    <div class="cal-bar">
+      <button class="cal-nav" id="cal-prev" title="上月">◀</button>
+      <span class="cal-title">${y} 年 ${m + 1} 月</span>
+      <button class="cal-nav" id="cal-next" title="下月">▶</button>
+      <button class="cal-today-btn" id="cal-today">今天</button>
+    </div>
+    <div class="cal-grid">
+      ${['日', '一', '二', '三', '四', '五', '六'].map((w) => `<div class="cal-dow">${w}</div>`).join('')}`;
+  for (let i = 0; i < startDow; i++) html += '<div class="cal-cell empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = `${y}-${pad(m + 1)}-${pad(d)}`;
+    const cls = ['cal-cell'];
+    if (key === todayKey) cls.push('today');
+    if (key === state.calDate) cls.push('sel');
+    if (overdueDays.has(key) && key !== todayKey) cls.push('has-overdue');
+    if (counts[key]) cls.push('has');
+    html += `<div class="${cls.join(' ')}" data-day="${key}">
+      <span class="cal-day-n">${d}</span>
+      ${counts[key] ? `<span class="cal-badge">${counts[key]}</span>` : ''}
+    </div>`;
+  }
+  html += '</div>';
+
+  // 选中日期备忘列表
+  const dayMemos = memosOfDay(state.calDate);
+  html += `<div class="cal-memo-head">📌 ${fmtDayTitle(state.calDate)} · ${dayMemos.length} 条备忘</div>`;
+  html += dayMemos.map(memoHtml).join('') || '<div class="cal-empty">当天没有备忘,在上方记一条吧</div>';
+
+  el.innerHTML = html;
+  $('#stat-count').textContent = `${state.memos.filter((m) => !m.deleted && !m.done).length} 条待办`;
+
+  bindCalendarEvents(el);
+  bindMemoEvents(el); // 复用备忘操作(完成/删除/置顶/右键)
+}
+
+function bindCalendarEvents(container) {
+  const prev = container.querySelector('#cal-prev');
+  const next = container.querySelector('#cal-next');
+  const todayBtn = container.querySelector('#cal-today');
+  if (prev) prev.addEventListener('click', () => { state.calMonth--; if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; } render(); });
+  if (next) next.addEventListener('click', () => { state.calMonth++; if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; } render(); });
+  if (todayBtn) todayBtn.addEventListener('click', () => {
+    const n = new Date();
+    state.calYear = n.getFullYear();
+    state.calMonth = n.getMonth();
+    state.calDate = dateKey(n.getTime());
+    render();
+  });
+  container.querySelectorAll('.cal-cell[data-day]').forEach((cell) => {
+    cell.addEventListener('click', () => {
+      state.calDate = cell.dataset.day;
+      render();
+    });
+  });
+}
+
 // ---------- 渲染 ----------
 function visibleMemos() {
   let list = state.memos.slice();
@@ -147,6 +252,7 @@ function groupMemos(list) {
 }
 
 function render() {
+  if (state.view === 'calendar') { renderCalendar(); return; }
   const list = visibleMemos();
   const groups = groupMemos(list);
   const el = $('#list');

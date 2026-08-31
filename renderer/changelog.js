@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '0.6.0',
+    date: '2026-08-31',
+    changes: [
+      '新增日历视图:按月份可视化展示备忘安排(今天高亮、过期标红、有备忘显示数量角标),点击日期查看当天备忘',
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-08-31',
     changes: [
