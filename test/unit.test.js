@@ -82,6 +82,22 @@ function ok(cond, name) {
   ok(store.getMemo(recentDel.id), '近期条目保留');
   ok(store.cleanupTrash() === 0, '重复清理无副作用');
 
+  console.log('— 编辑备忘 —');
+  const em = store.addMemo({ title: '原始标题', due_at: now + 3600_000 });
+  store.snooze(em.id, 5); // 让 snoozed_until 有值、due_sent=true
+  ok(store.getMemo(em.id).snoozed_until > 0, '前置:延后已设');
+  const newDue = now + 7200_000;
+  const upd = store.updateMemo(em.id, { title: '新标题', due_at: newDue, repeat_type: 'weekly', priority: 2, pinned: true, advance_minutes: 10 });
+  ok(upd.title === '新标题' && upd.due_at === newDue && upd.repeat_type === 'weekly' && upd.priority === 2 && upd.pinned === true && upd.advance_minutes === 10, 'updateMemo 应用所有字段');
+  ok(store.getMemo(em.id).due_sent === false && store.getMemo(em.id).adv_sent === false && store.getMemo(em.id).snoozed_until === null, '时间/提前量变化重置提醒状态');
+  store.softDelete(em.id);
+  ok(store.updateMemo(em.id, { title: 'x' }) === null, '软删除后不可编辑');
+  const e2 = store.addMemo({ title: 'A', due_at: now + 3600_000 });
+  const beforeSent = store.getMemo(e2.id).due_sent;
+  store.updateMemo(e2.id, { title: 'B', priority: 1 });
+  ok(store.getMemo(e2.id).title === 'B' && store.getMemo(e2.id).priority === 1, '单字段更新生效');
+  ok(store.getMemo(e2.id).due_sent === beforeSent, '未改时间/提前量时不重置 due_sent');
+
   console.log('— 周期计算 —');
   const t = new Date(2026, 0, 31, 10, 0).getTime();
   ok(nextDueAt(t, 'daily') === new Date(2026, 1, 1, 10, 0).getTime(), 'daily 跨月');

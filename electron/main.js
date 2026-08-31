@@ -184,6 +184,7 @@ function registerIpc() {
   ipcMain.handle('memos:toggle-done', (_e, id) => store.toggleDone(Number(id)));
   ipcMain.handle('memos:toggle-pin', (_e, id) => store.togglePin(Number(id)));
   ipcMain.handle('memos:set-priority', (_e, id, p) => store.setPriority(Number(id), Number(p)));
+  ipcMain.handle('memos:update', (_e, id, patch) => store.updateMemo(Number(id), patch));
   ipcMain.handle('memos:snooze', (_e, id, minutes) => store.snooze(Number(id), Number(minutes)));
   ipcMain.handle('memos:soft-delete', (_e, id) => store.softDelete(Number(id)));
   ipcMain.handle('memos:restore', (_e, id) => store.restore(Number(id)));

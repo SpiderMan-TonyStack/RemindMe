@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('remindme', {
   toggleDone: (id) => ipcRenderer.invoke('memos:toggle-done', id),
   togglePin: (id) => ipcRenderer.invoke('memos:toggle-pin', id),
   setPriority: (id, p) => ipcRenderer.invoke('memos:set-priority', id, p),
+  update: (id, patch) => ipcRenderer.invoke('memos:update', id, patch),
   snooze: (id, minutes) => ipcRenderer.invoke('memos:snooze', id, minutes),
   softDelete: (id) => ipcRenderer.invoke('memos:soft-delete', id),
   restore: (id) => ipcRenderer.invoke('memos:restore', id),

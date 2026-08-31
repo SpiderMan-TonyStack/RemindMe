@@ -358,6 +358,11 @@ function bindMemoEvents(container) {
       state.ctxMemoId = id;
       showCtxMenu(e.clientX, e.clientY, id);
     });
+    el.addEventListener('dblclick', (e) => {
+      // 避免双击按钮触发
+      if (e.target.closest('[data-act]')) return;
+      openEdit(Number(el.dataset.id));
+    });
   });
   container.querySelectorAll('.thumb').forEach((img) => {
     img.addEventListener('click', (e) => {
@@ -375,6 +380,52 @@ async function handleAct(act, id, node) {
     case 'restore': await api.restore(id); toast('已恢复'); break;
     case 'hard-delete': await api.hardDelete(id); toast('已永久删除'); break;
   }
+  await load();
+}
+
+// ---------- 编辑备忘 ----------
+const state_edit = { id: null };
+
+function toLocalInput(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function openEdit(id) {
+  const m = state.memos.find((mm) => mm.id === id);
+  if (!m || m.deleted) return;
+  state_edit.id = id;
+  $('#edit-title').value = m.title;
+  $('#edit-time').value = toLocalInput(new Date(m.due_at));
+  $('#edit-repeat').value = m.repeat_type || 'none';
+  $('#edit-priority').value = String(m.priority || 0);
+  $('#edit-advance').value = String(m.advance_minutes || 0);
+  $('#edit-pinned').checked = !!m.pinned;
+  $('#edit-modal').classList.remove('hidden');
+  setTimeout(() => $('#edit-title').focus(), 50);
+}
+
+function closeEdit() {
+  $('#edit-modal').classList.add('hidden');
+  state_edit.id = null;
+}
+
+async function saveEdit() {
+  if (!state_edit.id) return;
+  const title = $('#edit-title').value.trim();
+  if (!title) { toast('标题不能为空'); $('#edit-title').focus(); return; }
+  const timeVal = $('#edit-time').value;
+  if (!timeVal) { toast('请选择时间'); $('#edit-time').focus(); return; }
+  const patch = {
+    title,
+    due_at: new Date(timeVal).getTime(),
+    repeat_type: $('#edit-repeat').value,
+    priority: Number($('#edit-priority').value),
+    advance_minutes: Number($('#edit-advance').value),
+    pinned: $('#edit-pinned').checked,
+  };
+  await api.update(state_edit.id, patch);
+  closeEdit();
+  toast('备忘已更新');
   await load();
 }
 
@@ -561,6 +612,8 @@ function showCtxMenu(x, y, id) {
       <div class="ctx-item" data-cmd="prio1">优先级:一般</div>
       <div class="ctx-item" data-cmd="prio2">优先级:重要</div>
       <div class="ctx-sep"></div>
+      <div class="ctx-item" data-cmd="edit">编辑 <span class="k">✏️</span></div>
+      <div class="ctx-sep"></div>
       <div class="ctx-item" data-cmd="img">添加图片 <span class="k">🖼</span></div>
       <div class="ctx-sep"></div>
       <div class="ctx-item" data-cmd="snooze5">延后 5 分钟</div>
@@ -587,6 +640,7 @@ async function ctxCommand(cmd, id) {
   hideCtxMenu();
   switch (cmd) {
     case 'pin': await api.togglePin(id); break;
+    case 'edit': openEdit(id); return;
     case 'prio0': case 'prio1': case 'prio2':
       await api.setPriority(id, Number(cmd.slice(4))); break;
     case 'snooze5': await api.snooze(id, 5); toast('已延后 5 分钟'); break;
@@ -698,6 +752,17 @@ function bindEvents() {
   $('#lb-delete').addEventListener('click', deleteLightboxImage);
   $('#lightbox').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeLightbox();
+  });
+
+  // 编辑备忘
+  $('#edit-close').addEventListener('click', closeEdit);
+  $('#edit-cancel').addEventListener('click', closeEdit);
+  $('#edit-save').addEventListener('click', saveEdit);
+  $('#edit-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeEdit();
+  });
+  $('#edit-title').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
   });
 
   // 批量操作(清空已完成 / 清空回收站)

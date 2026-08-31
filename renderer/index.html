@@ -146,7 +146,64 @@
       </div>
     </div>
     <div class="modal-foot">
-      <span>RemindMe v0.6.0 · 极简备忘,到点提醒</span>
+      <span>RemindMe v0.7.0 · 极简备忘,到点提醒</span>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑备忘 -->
+<div id="edit-modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span>✏️ 编辑备忘</span>
+      <button id="edit-close" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-row">
+        <label>标题</label>
+        <input id="edit-title" type="text" maxlength="200" style="flex:1;background:var(--card-2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:6px 10px;outline:none">
+      </div>
+      <div class="setting-row">
+        <label>时间</label>
+        <input id="edit-time" type="datetime-local" style="background:var(--card-2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:6px 10px;outline:none">
+      </div>
+      <div class="setting-row">
+        <label>重复</label>
+        <select id="edit-repeat">
+          <option value="none">不重复</option>
+          <option value="daily">每天</option>
+          <option value="weekly">每周</option>
+          <option value="monthly">每月</option>
+          <option value="yearly">每年</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>优先级</label>
+        <select id="edit-priority">
+          <option value="0">普通</option>
+          <option value="1">一般</option>
+          <option value="2">重要</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>提前提醒</label>
+        <select id="edit-advance">
+          <option value="0">不提前</option>
+          <option value="5">5 分钟</option>
+          <option value="10">10 分钟</option>
+          <option value="15">15 分钟</option>
+          <option value="30">30 分钟</option>
+          <option value="60">60 分钟</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>置顶</label>
+        <label class="switch"><input type="checkbox" id="edit-pinned"><span></span></label>
+      </div>
+    </div>
+    <div class="modal-foot" style="display:flex;gap:10px;justify-content:center">
+      <button id="edit-save" class="qa-add" style="padding:8px 28px">保存</button>
+      <button id="edit-cancel" class="btn-mini">取消</button>
     </div>
   </div>
 </div>

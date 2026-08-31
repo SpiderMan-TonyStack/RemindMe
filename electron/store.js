@@ -164,6 +164,27 @@ class Store {
     return { ...m };
   }
 
+  /** 编辑备忘:更新标题/时间/重复/优先级/置顶/提前提醒;时间变化时重置提醒调度 */
+  updateMemo(id, patch) {
+    const m = this.getMemo(id);
+    if (!m || m.deleted) return null;
+    const p = patch || {};
+    if (typeof p.title === 'string' && p.title.trim()) m.title = p.title.trim();
+    if (p.due_at) m.due_at = Number(p.due_at);
+    if (p.repeat_type) m.repeat_type = p.repeat_type;
+    if (p.priority !== undefined) m.priority = Math.min(2, Math.max(0, Number(p.priority) || 0));
+    if (p.pinned !== undefined) m.pinned = !!p.pinned;
+    if (p.advance_minutes !== undefined) m.advance_minutes = Number(p.advance_minutes) || 0;
+    // 时间/提前量变化 → 重置提醒状态,重新调度
+    if (p.due_at || p.advance_minutes !== undefined || p.repeat_type) {
+      m.due_sent = false;
+      m.adv_sent = false;
+      m.snoozed_until = null;
+    }
+    this.save();
+    return { ...m };
+  }
+
   /** 延后提醒:到点后把本次提醒推到 now+minutes,下次扫描再触发 */
   snooze(id, minutes) {
     const m = this.getMemo(id);
