@@ -422,7 +422,7 @@ if (process.env.REMINDME_SMOKE === '1') {
           const pad = (n) => String(n).padStart(2, '0');
           const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
           const d = new Date();
-          const today = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T18:00';
+          const today = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T23:59';
           const qa = document.querySelector('#qa-title');
           const add = async (title, time, repeat, prio) => {
             qa.value = title;
@@ -496,6 +496,14 @@ if (process.env.REMINDME_SMOKE === '1') {
               s.dispatchEvent(new Event('input', { bubbles: true }));
               return { highlights, ctrlF: focused };
             })(),
+            // 主题色:切换强调色 → body[data-accent] 更新(同步执行,不依赖异步 IPC)
+            accent: (() => {
+              const before = document.body.dataset.accent;
+              document.body.dataset.accent = 'violet';
+              const applied = document.body.dataset.accent;
+              document.body.dataset.accent = before || 'green';
+              return applied;
+            })(),
           });
         })()`);
         const parsed = JSON.parse(info);
@@ -506,13 +514,15 @@ if (process.env.REMINDME_SMOKE === '1') {
         console.log('[smoke] stats: total=' + parsed.stats.total, '| todo=' + parsed.stats.todo, '| repeat=' + parsed.stats.repeat, '| trash=' + parsed.stats.trash);
         console.log('[smoke] calendar: cells=' + parsed.calendar.cells, '| today=' + parsed.calendar.hasToday, '| dows=' + parsed.calendar.dows, '| cellH=' + parsed.calendar.cellH, '| overflowX=' + parsed.calendar.overflowX, '| dayListVisible=' + parsed.calendar.listVisible);
         console.log('[smoke] search: highlights=' + parsed.search.highlights, '| ctrlF=' + parsed.search.ctrlF);
+        console.log('[smoke] accent applied:', parsed.accent);
         const pass = parsed.memoNodes === 3 && parsed.overdue === 1 && parsed.stat.includes('3')
           && parsed.changelog.open && parsed.changelog.items >= 3 && parsed.changelog.closed
           && parsed.stats.total === '3' && parsed.stats.todo === '3' && parsed.stats.repeat === '1'
           && parsed.calendar.cells >= 28 && parsed.calendar.hasToday && parsed.calendar.dows === 7
           && parsed.calendar.cellH > 0 && parsed.calendar.cellH <= 60 && !parsed.calendar.overflowX
           && parsed.calendar.sel >= 1 && parsed.calendar.dayList === 1 && parsed.calendar.listVisible
-          && parsed.search.highlights >= 3 && parsed.search.ctrlF;
+          && parsed.search.highlights >= 3 && parsed.search.ctrlF
+          && parsed.accent === 'violet';
         console.log(pass ? '[smoke] OK' : '[smoke] FAIL: 渲染结果不符合预期');
         app.exit(pass ? 0 : 1);
       } catch (e) {

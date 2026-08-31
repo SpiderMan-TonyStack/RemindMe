@@ -64,8 +64,9 @@ async function load() {
   const [memos, settings] = await Promise.all([api.list(), api.getSettings()]);
   state.memos = memos;
   state.settings = settings;
-  applyTheme(settings.theme);
+  applyTheme(settings.theme, settings.accent);
   $('#set-theme').value = settings.theme;
+  $('#set-accent').value = settings.accent || 'green';
   $('#set-autolaunch').checked = !!settings.autoLaunch;
   $('#set-advance').value = String(settings.defaultAdvance);
   $('#set-defaulttime').value = settings.defaultTime;
@@ -746,11 +747,13 @@ function closeChangelog() { $('#changelog-modal').classList.add('hidden'); }
 function openSettings() { $('#settings-modal').classList.remove('hidden'); }
 function closeSettings() { $('#settings-modal').classList.add('hidden'); }
 
-async function applyTheme(theme) {
+async function applyTheme(theme, accent) {
   if (theme === 'system') {
     theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
   document.body.dataset.theme = theme;
+  if (accent) document.body.dataset.accent = accent;
+  else if (!document.body.dataset.accent) document.body.dataset.accent = 'green';
 }
 
 // ---------- Toast ----------
@@ -846,6 +849,10 @@ function bindEvents() {
   $('#set-theme').addEventListener('change', async (e) => {
     state.settings = await api.setSettings({ theme: e.target.value });
     applyTheme(e.target.value);
+  });
+  $('#set-accent').addEventListener('change', async (e) => {
+    state.settings = await api.setSettings({ accent: e.target.value });
+    applyTheme(state.settings.theme, e.target.value);
   });
   $('#set-autolaunch').addEventListener('change', async (e) => {
     state.settings = await api.setSettings({ autoLaunch: e.target.checked });

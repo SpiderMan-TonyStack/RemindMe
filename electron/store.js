@@ -19,6 +19,7 @@ const REPEAT_NONE = 'none';
 
 const DEFAULT_SETTINGS = {
   theme: 'dark',          // dark | light | system
+  accent: 'green',        // 主题色:green | blue | violet | amber | rose | cyan
   autoLaunch: true,       // 开机自启
   defaultAdvance: 0,      // 默认提前提醒(分钟),0 表示不提前
   defaultTime: '18:00',   // 快速添加默认时间

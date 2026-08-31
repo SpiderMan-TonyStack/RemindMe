@@ -28,6 +28,22 @@ body[data-theme="light"] {
   --shadow: 0 8px 30px rgba(30, 50, 90, .12);
 }
 
+/* ===== 强调色主题(6 套,深色) ===== */
+body[data-accent="blue"]   { --accent: #4a9eff; --accent-2: #38d9a9; --purple: #7aa2ff; }
+body[data-accent="green"]  { --accent: #38d9a9; --accent-2: #4a9eff; --purple: #b197fc; }
+body[data-accent="violet"] { --accent: #b197fc; --accent-2: #7c6cf5; --purple: #e599f7; }
+body[data-accent="amber"]  { --accent: #ffb454; --accent-2: #ff8a65; --purple: #e0a86b; }
+body[data-accent="rose"]   { --accent: #ff7a9e; --accent-2: #ff6b6b; --purple: #d46a8a; }
+body[data-accent="cyan"]   { --accent: #4dd0e1; --accent-2: #64b5f6; --purple: #4db6ac; }
+
+/* ===== 强调色主题(浅色,加深保证对比度) ===== */
+body[data-theme="light"][data-accent="blue"]   { --accent: #2f6fd8; --accent-2: #0f9d84; --purple: #5b4fd0; }
+body[data-theme="light"][data-accent="green"]  { --accent: #0e9c77; --accent-2: #2f6fd8; --purple: #6a5acd; }
+body[data-theme="light"][data-accent="violet"] { --accent: #7c5cd6; --accent-2: #5a4bd4; --purple: #a55bd4; }
+body[data-theme="light"][data-accent="amber"]  { --accent: #c07f18; --accent-2: #c85a2e; --purple: #a8864a; }
+body[data-theme="light"][data-accent="rose"]   { --accent: #d4556f; --accent-2: #d33f3f; --purple: #b0486c; }
+body[data-theme="light"][data-accent="cyan"]   { --accent: #128fa3; --accent-2: #3d7ed6; --purple: #2f8f83; }
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body { height: 100%; }
