@@ -71,6 +71,29 @@ async function load() {
   render();
 }
 
+// ---------- 数据统计 ----------
+function updateStats() {
+  const memos = state.memos;
+  if (!memos || !memos.length) {
+    ['stat-total', 'stat-todo', 'stat-today', 'stat-overdue', 'stat-donetoday', 'stat-repeat', 'stat-trash']
+      .forEach((id) => { const el = document.getElementById(id); if (el) el.textContent = '0'; });
+    return;
+  }
+  const now = Date.now();
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(); dayEnd.setHours(23, 59, 59, 999);
+  const active = memos.filter((m) => !m.deleted);
+  const todo = active.filter((m) => !m.done);
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = String(v); };
+  set('stat-total', active.length);
+  set('stat-todo', todo.length);
+  set('stat-today', todo.filter((m) => m.due_at >= dayStart.getTime() && m.due_at <= dayEnd.getTime()).length);
+  set('stat-overdue', todo.filter((m) => m.due_at < now).length);
+  set('stat-donetoday', active.filter((m) => m.done && m.done_at >= dayStart.getTime() && m.done_at <= dayEnd.getTime()).length);
+  set('stat-repeat', active.filter((m) => m.repeat_type && m.repeat_type !== 'none').length);
+  set('stat-trash', memos.filter((m) => m.deleted).length);
+}
+
 // ---------- 渲染 ----------
 function visibleMemos() {
   let list = state.memos.slice();
@@ -133,6 +156,7 @@ function render() {
     el.innerHTML = '';
     empty.classList.remove('hidden');
     $('#list-actions').classList.add('hidden');
+    updateStats();
     empty.querySelector('.empty-title').textContent =
       state.view === 'trash' ? '回收站是空的' :
       state.view === 'done' ? '还没有完成的备忘' : '还没有备忘';
@@ -142,6 +166,7 @@ function render() {
     return;
   }
   empty.classList.add('hidden');
+  updateStats();
 
   // 操作条:仅「已完成 / 回收站」视图显示对应按钮
   const actions = $('#list-actions');

@@ -380,6 +380,18 @@ if (process.env.REMINDME_SMOKE === '1') {
               const closed = document.querySelector('#changelog-modal').classList.contains('hidden');
               return { open, items, closed };
             })(),
+            // 数据统计:打开设置 → 统计值正确(3 条备忘:1 已完成?→ 待办 3 条未完成)
+            stats: (() => {
+              document.querySelector('#btn-settings').click();
+              const s = {
+                total: document.querySelector('#stat-total').textContent,
+                todo: document.querySelector('#stat-todo').textContent,
+                repeat: document.querySelector('#stat-repeat').textContent,
+                trash: document.querySelector('#stat-trash').textContent,
+              };
+              document.querySelector('#modal-close').click();
+              return s;
+            })(),
           });
         })()`);
         const parsed = JSON.parse(info);
@@ -387,8 +399,10 @@ if (process.env.REMINDME_SMOKE === '1') {
         console.log('[smoke] memos:', parsed.memoNodes, '| groups:', parsed.groups.join('/'), '| overdue:', parsed.overdue);
         console.log('[smoke] stat:', parsed.stat, '| trashEmpty:', parsed.trashEmpty);
         console.log('[smoke] changelog: open=' + parsed.changelog.open, '| items=' + parsed.changelog.items, '| closed=' + parsed.changelog.closed);
+        console.log('[smoke] stats: total=' + parsed.stats.total, '| todo=' + parsed.stats.todo, '| repeat=' + parsed.stats.repeat, '| trash=' + parsed.stats.trash);
         const pass = parsed.memoNodes === 3 && parsed.overdue === 1 && parsed.stat.includes('3')
-          && parsed.changelog.open && parsed.changelog.items >= 3 && parsed.changelog.closed;
+          && parsed.changelog.open && parsed.changelog.items >= 3 && parsed.changelog.closed
+          && parsed.stats.total === '3' && parsed.stats.todo === '3' && parsed.stats.repeat === '1';
         console.log(pass ? '[smoke] OK' : '[smoke] FAIL: 渲染结果不符合预期');
         app.exit(pass ? 0 : 1);
       } catch (e) {
