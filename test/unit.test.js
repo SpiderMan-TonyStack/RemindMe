@@ -98,6 +98,16 @@ function ok(cond, name) {
   ok(store.getMemo(e2.id).title === 'B' && store.getMemo(e2.id).priority === 1, '单字段更新生效');
   ok(store.getMemo(e2.id).due_sent === beforeSent, '未改时间/提前量时不重置 due_sent');
 
+  console.log('— 内容字段 —');
+  const cm = store.addMemo({ title: '有内容的备忘', due_at: now + 3600_000, content: '这里是详细说明\n多行内容' });
+  ok(store.getMemo(cm.id).content === '这里是详细说明\n多行内容', 'addMemo 接受 content 字段');
+  const cm2 = store.addMemo({ title: '无内容', due_at: now + 3600_000 });
+  ok(store.getMemo(cm2.id).content === '', 'addMemo 默认 content 为空');
+  const updC = store.updateMemo(cm.id, { content: '更新后的内容' });
+  ok(updC.content === '更新后的内容', 'updateMemo 支持修改 content');
+  store.updateMemo(cm.id, { content: '' });
+  ok(store.getMemo(cm.id).content === '', 'content 可清空为空字符串');
+
   console.log('— 周期计算 —');
   const t = new Date(2026, 0, 31, 10, 0).getTime();
   ok(nextDueAt(t, 'daily') === new Date(2026, 1, 1, 10, 0).getTime(), 'daily 跨月');

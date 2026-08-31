@@ -40,9 +40,10 @@ class Store {
         if (raw && Array.isArray(raw.memos)) {
           this.data = raw;
           this.data.settings = { ...DEFAULT_SETTINGS, ...(raw.settings || {}) };
-          // 旧数据兜底:早期版本 memo 无 images 字段
+          // 旧数据兜底:早期版本 memo 无 images/content 字段
           for (const m of this.data.memos) {
             if (!Array.isArray(m.images)) m.images = [];
+            if (typeof m.content !== 'string') m.content = '';
           }
           if (!this.data.nextId) {
             this.data.nextId = raw.memos.reduce((m, x) => Math.max(m, Number(x.id) || 0), 0) + 1;
@@ -95,11 +96,12 @@ class Store {
     return this.data.memos.find((m) => m.id === id);
   }
 
-  addMemo({ title, due_at, repeat_type = REPEAT_NONE, advance_minutes = 0, priority = 0, pinned = false, images }) {
+  addMemo({ title, due_at, repeat_type = REPEAT_NONE, advance_minutes = 0, priority = 0, pinned = false, images, content }) {
     const now = Date.now();
     const memo = {
       id: this.data.nextId++,
       title: String(title || '').trim(),
+      content: typeof content === 'string' ? content : '',
       due_at: Number(due_at) || now + 3600_000,
       repeat_type,
       advance_minutes: Number(advance_minutes) || 0,
@@ -172,6 +174,7 @@ class Store {
     if (!m || m.deleted) return null;
     const p = patch || {};
     if (typeof p.title === 'string' && p.title.trim()) m.title = p.title.trim();
+    if (typeof p.content === 'string') m.content = p.content;
     if (p.due_at) m.due_at = Number(p.due_at);
     if (p.repeat_type) m.repeat_type = p.repeat_type;
     if (p.priority !== undefined) m.priority = Math.min(2, Math.max(0, Number(p.priority) || 0));

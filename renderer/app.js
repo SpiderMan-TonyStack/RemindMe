@@ -353,6 +353,7 @@ function memoHtml(m) {
     ${m.deleted ? '' : `<span class="check ${done ? 'checked' : ''}" data-act="check" title="${done ? '取消完成' : '完成'}">${done ? '✓' : ''}</span>`}
     <div class="memo-main">
       <span class="memo-title ${done ? 'done' : ''}" title="${escAttr(m.title)}">${highlightTitle(m.title, state.search)}</span>
+      ${m.content ? `<div class="memo-content ${done ? 'done' : ''}" title="${escAttr(m.content)}">${highlightTitle(m.content.replace(/\n/g, ' '), state.search)}</div>` : ''}
       ${thumbs}
     </div>
     <span class="memo-flags">${pinFlag}${repeatFlag}${advFlag}</span>
@@ -438,6 +439,7 @@ function openEdit(id) {
   if (!m || m.deleted) return;
   state_edit.id = id;
   $('#edit-title').value = m.title;
+  $('#edit-content').value = m.content || '';
   $('#edit-time').value = toLocalInput(new Date(m.due_at));
   $('#edit-repeat').value = m.repeat_type || 'none';
   $('#edit-priority').value = String(m.priority || 0);
@@ -463,6 +465,7 @@ async function saveEdit() {
   if (!timeVal) { toast('请选择时间'); $('#edit-time').focus(); return; }
   const patch = {
     title,
+    content: $('#edit-content').value,
     due_at: new Date(timeVal).getTime(),
     repeat_type: $('#edit-repeat').value,
     priority: Number($('#edit-priority').value),
