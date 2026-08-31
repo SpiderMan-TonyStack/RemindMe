@@ -151,6 +151,17 @@ function ok(cond, name) {
   const bad = store3.importData({ foo: 1 });
   ok(bad.error && bad.added === 0, '非法格式返回 error');
 
+  console.log('— 提醒历史 —');
+  const h = new Store(file); // 重新加载(替换导入后的状态)
+  const histDue = h.addMemo({ title: '历史到期', due_at: now - 60_000 });
+  const firedH = h.scanReminders(() => {});
+  ok(firedH.length >= 1, '到期触发产生 fired');
+  const hist = h.getHistory(10);
+  ok(hist.length >= 1 && hist[0].id === histDue.id && hist[0].kind === 'due', '提醒历史记录触发条目');
+  ok(typeof hist[0].at === 'number', '历史含触发时间戳');
+  const hist2 = h.getHistory(1);
+  ok(hist2.length === 1, 'limit 生效');
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log(`\n共通过 ${passed} 项断言`);
   if (process.exitCode) console.log('存在失败项!');

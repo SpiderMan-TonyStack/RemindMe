@@ -72,7 +72,29 @@ async function load() {
   $('#set-sound').value = settings.sound || 'clear';
   syncQuickAddDefaultTime();
   updateTrayTip();
+  loadReminderHistory();
   render();
+}
+
+/** 加载最近提醒记录(设置面板) */
+async function loadReminderHistory() {
+  const box = $('#reminder-history');
+  if (!box) return;
+  try {
+    const list = await api.getReminderHistory(10);
+    if (!list || !list.length) {
+      box.innerHTML = '<span class="muted">暂无提醒记录</span>';
+      return;
+    }
+    box.innerHTML = list.map((h) => `
+      <div class="history-item">
+        <span class="h-kind ${h.kind === 'due' ? 'due' : ''}">${h.kind === 'due' ? '⏰' : '🔔'}</span>
+        <span class="h-title">${esc(h.title)}</span>
+        <span class="h-time">${fmtTime(h.at)}</span>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<span class="muted">加载失败</span>';
+  }
 }
 
 // ---------- 数据统计 ----------

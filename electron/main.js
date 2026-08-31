@@ -191,6 +191,7 @@ function registerIpc() {
   ipcMain.handle('memos:hard-delete', (_e, id) => store.hardDelete(Number(id)));
   ipcMain.handle('memos:clear-done', () => store.clearDone());
   ipcMain.handle('memos:clear-trash', () => store.clearTrash());
+  ipcMain.handle('memos:history', (_e, limit) => store.getHistory(Number(limit) || 50));
 
   // 图片附件
   ipcMain.handle('memos:pick-images', async () => {

@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('remindme', {
   hardDelete: (id) => ipcRenderer.invoke('memos:hard-delete', id),
   clearDone: () => ipcRenderer.invoke('memos:clear-done'),
   clearTrash: () => ipcRenderer.invoke('memos:clear-trash'),
+  getReminderHistory: (limit) => ipcRenderer.invoke('memos:history', limit),
 
   // 图片附件
   pickImages: () => ipcRenderer.invoke('memos:pick-images'),

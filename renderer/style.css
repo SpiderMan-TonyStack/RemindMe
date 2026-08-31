@@ -406,6 +406,18 @@ body[data-theme="light"] .drop-overlay { background: rgba(255,255,255,.55); }
 .stat-item:nth-child(4n+4) b { color: var(--purple); }
 body[data-theme="light"] .stat-item b { color: var(--accent); }
 
+/* 最近提醒记录 */
+.history-box {
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; max-height: 168px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 4px; font-size: 12.5px;
+}
+.history-item { display: flex; align-items: center; gap: 8px; color: var(--text-2); }
+.h-kind { flex-shrink: 0; }
+.h-kind.due { color: var(--danger); }
+.h-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h-time { flex-shrink: 0; font-size: 11px; color: var(--text-3); }
+
 /* 日历视图 */
 .cal-bar {
   display: flex; align-items: center; gap: 10px;

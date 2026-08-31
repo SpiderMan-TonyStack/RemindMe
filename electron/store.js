@@ -28,7 +28,7 @@ const DEFAULT_SETTINGS = {
 class Store {
   constructor(filePath) {
     this.filePath = filePath;
-    this.data = { memos: [], settings: { ...DEFAULT_SETTINGS }, nextId: 1 };
+    this.data = { memos: [], settings: { ...DEFAULT_SETTINGS }, nextId: 1, history: [] };
     this._load();
   }
 
@@ -46,6 +46,7 @@ class Store {
           if (!this.data.nextId) {
             this.data.nextId = raw.memos.reduce((m, x) => Math.max(m, Number(x.id) || 0), 0) + 1;
           }
+          if (!Array.isArray(this.data.history)) this.data.history = [];
         }
       }
     } catch (e) {
@@ -348,8 +349,21 @@ class Store {
         });
       }
     }
-    if (fired.length) this.save();
+    if (fired.length) {
+      // 写入提醒历史(最多保留 100 条)
+      for (const f of fired) {
+        this.data.history = this.data.history || [];
+        this.data.history.unshift({ id: f.id, title: f.title, kind: f.kind, at: Date.now() });
+      }
+      this.data.history = this.data.history.slice(0, 100);
+      this.save();
+    }
     return fired;
+  }
+
+  /** 最近提醒历史(新→旧) */
+  getHistory(limit = 50) {
+    return (this.data.history || []).slice(0, limit);
   }
 }
 
