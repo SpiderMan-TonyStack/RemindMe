@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '1.2.1',
+    date: '2026-08-31',
+    changes: [
+      '修复编辑备忘弹窗标题框无法编辑的问题(input 显式启用文本选中,弹窗打开自动聚焦并全选)',
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-08-31',
     changes: [

@@ -504,6 +504,26 @@ if (process.env.REMINDME_SMOKE === '1') {
               document.body.dataset.accent = before || 'green';
               return applied;
             })(),
+            // 编辑弹窗:右键 → 编辑 → 标题 input 可见、可编辑(同步执行)
+            edit: (() => {
+              document.querySelector('.view-btn[data-view="all"]').click();
+              const memo = document.querySelector('.memo');
+              if (!memo) return { open: false };
+              const r = memo.getBoundingClientRect();
+              const ev = new MouseEvent('contextmenu', { bubbles: true, clientX: r.left + 30, clientY: r.top + 10 });
+              memo.dispatchEvent(ev);
+              document.querySelector('.ctx-item[data-cmd="edit"]').click();
+              const open = !document.querySelector('#edit-modal').classList.contains('hidden');
+              const input = document.querySelector('#edit-title');
+              const cs = input ? window.getComputedStyle(input) : null;
+              const selectable = !!(cs && (cs.userSelect === 'text' || cs.webkitUserSelect === 'text'));
+              const focused = document.activeElement === input;
+              const selStart = input ? input.selectionStart : -1;
+              const selEnd = input ? input.selectionEnd : -1;
+              const fullySelected = selStart === 0 && selEnd === (input ? input.value.length : 0);
+              document.querySelector('#edit-cancel').click();
+              return { open, selectable, focused, fullySelected, value: input ? input.value.slice(0, 14) : '' };
+            })(),
           });
         })()`);
         const parsed = JSON.parse(info);
@@ -515,6 +535,7 @@ if (process.env.REMINDME_SMOKE === '1') {
         console.log('[smoke] calendar: cells=' + parsed.calendar.cells, '| today=' + parsed.calendar.hasToday, '| dows=' + parsed.calendar.dows, '| cellH=' + parsed.calendar.cellH, '| overflowX=' + parsed.calendar.overflowX, '| dayListVisible=' + parsed.calendar.listVisible);
         console.log('[smoke] search: highlights=' + parsed.search.highlights, '| ctrlF=' + parsed.search.ctrlF);
         console.log('[smoke] accent applied:', parsed.accent);
+        console.log('[smoke] edit: open=' + parsed.edit.open, '| selectable=' + parsed.edit.selectable, '| focused=' + parsed.edit.focused, '| fullySel=' + parsed.edit.fullySelected, '| val=' + (parsed.edit.value || ''));
         const pass = parsed.memoNodes === 3 && parsed.overdue === 1 && parsed.stat.includes('3')
           && parsed.changelog.open && parsed.changelog.items >= 3 && parsed.changelog.closed
           && parsed.stats.total === '3' && parsed.stats.todo === '3' && parsed.stats.repeat === '1'
@@ -522,7 +543,8 @@ if (process.env.REMINDME_SMOKE === '1') {
           && parsed.calendar.cellH > 0 && parsed.calendar.cellH <= 60 && !parsed.calendar.overflowX
           && parsed.calendar.sel >= 1 && parsed.calendar.dayList === 1 && parsed.calendar.listVisible
           && parsed.search.highlights >= 3 && parsed.search.ctrlF
-          && parsed.accent === 'violet';
+          && parsed.accent === 'violet'
+          && parsed.edit.open && parsed.edit.selectable && parsed.edit.focused && parsed.edit.fullySelected;
         console.log(pass ? '[smoke] OK' : '[smoke] FAIL: 渲染结果不符合预期');
         app.exit(pass ? 0 : 1);
       } catch (e) {

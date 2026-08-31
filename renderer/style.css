@@ -61,7 +61,11 @@ body {
 
 #app { display: flex; flex-direction: column; height: 100vh; }
 
-input, select, button { font-family: inherit; }
+input, select, button, textarea {
+  font-family: inherit;
+  user-select: text;       /* 显式允许表单元素文本可选中、可点击定位光标(覆盖 body 的 user-select:none) */
+  -webkit-user-select: text;
+}
 
 /* ===== 顶栏 ===== */
 .topbar {

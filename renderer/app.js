@@ -444,7 +444,10 @@ function openEdit(id) {
   $('#edit-advance').value = String(m.advance_minutes || 0);
   $('#edit-pinned').checked = !!m.pinned;
   $('#edit-modal').classList.remove('hidden');
-  setTimeout(() => $('#edit-title').focus(), 50);
+  // 弹窗打开后立即聚焦标题输入框并全选,用户可直接覆盖输入
+  const el = $('#edit-title');
+  el.focus();
+  try { el.setSelectionRange(0, el.value.length); } catch (e) { /* input 类型不支持时忽略 */ }
 }
 
 function closeEdit() {
