@@ -71,6 +71,7 @@ async function load() {
   $('#set-defaulttime').value = settings.defaultTime;
   $('#set-sound').value = settings.sound || 'clear';
   syncQuickAddDefaultTime();
+  updateTrayTip();
   render();
 }
 
@@ -325,13 +326,29 @@ function memoHtml(m) {
     <span class="prio-dot p${m.priority}"></span>
     ${m.deleted ? '' : `<span class="check ${done ? 'checked' : ''}" data-act="check" title="${done ? '取消完成' : '完成'}">${done ? '✓' : ''}</span>`}
     <div class="memo-main">
-      <span class="memo-title ${done ? 'done' : ''}" title="${escAttr(m.title)}">${esc(m.title)}</span>
+      <span class="memo-title ${done ? 'done' : ''}" title="${escAttr(m.title)}">${highlightTitle(m.title, state.search)}</span>
       ${thumbs}
     </div>
     <span class="memo-flags">${pinFlag}${repeatFlag}${advFlag}</span>
     <span class="memo-time ${timeCls}">${timeText}</span>
     <span class="memo-ops">${ops}</span>
   </div>`;
+}
+
+/** 搜索高亮:把 title 中匹配 query 的部分包 <span class="hl"> */
+function highlightTitle(title, q) {
+  const safe = esc(title);
+  const query = (q || '').trim();
+  if (!query) return safe;
+  const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  return safe.replace(re, (m) => `<span class="hl">${m}</span>`);
+}
+
+/** 更新托盘气泡:今日待办数 */
+function updateTrayTip() {
+  if (!state.memos) return;
+  const n = state.memos.filter((m) => !m.deleted && !m.done && timeState(m) !== 'future').length;
+  api.setTrayTip(`RemindMe 备忘录 · 待办 ${n}`);
 }
 
 function esc(s) {
@@ -872,11 +889,16 @@ function bindEvents() {
     render();
   });
 
-  // 快捷键(渲染层):Ctrl+N 聚焦输入
+  // 快捷键(渲染层):Ctrl+N 聚焦输入 · Ctrl+F 聚焦搜索
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
       e.preventDefault();
       $('#qa-title').focus();
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      const s = $('#search');
+      s.focus();
+      s.select();
     }
   });
 }

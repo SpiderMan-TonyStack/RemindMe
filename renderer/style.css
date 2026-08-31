@@ -164,6 +164,8 @@ body[data-theme="light"] .qa-time, body[data-theme="light"] .qa-repeat, body[dat
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default;
 }
 .memo-title.done { text-decoration: line-through; color: var(--text-3); }
+.hl { background: rgba(255, 200, 60, .35); color: inherit; border-radius: 3px; padding: 0 1px; }
+body[data-theme="light"] .hl { background: rgba(255, 180, 50, .25); }
 
 .memo-flags { display: flex; gap: 5px; flex-shrink: 0; }
 .flag {

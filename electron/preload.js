@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('remindme', {
 
   // 导出
   exportData: (format) => ipcRenderer.invoke('data:export', format),
+  setTrayTip: (tip) => ipcRenderer.send('tray:set-tip', tip),
 
   // 事件
   onFocusQuickAdd: (cb) => ipcRenderer.on('focus-quick-add', () => cb()),

@@ -258,6 +258,11 @@ function registerIpc() {
     return s;
   });
 
+  // 托盘气泡
+  ipcMain.on('tray:set-tip', (_e, tip) => {
+    if (tray && typeof tip === 'string') tray.setToolTip(tip);
+  });
+
   ipcMain.handle('data:export', async (_e, format) => {
     const memos = store.listMemos().filter((m) => !m.deleted);
     const defaultName = `RemindMe-备份-${new Date().toISOString().slice(0, 10)}.${format === 'csv' ? 'csv' : 'json'}`;
@@ -399,12 +404,28 @@ if (process.env.REMINDME_SMOKE === '1') {
               const cells = document.querySelectorAll('.cal-cell[data-day]').length;
               const today = document.querySelector('.cal-cell.today');
               const title = document.querySelector('.cal-title').textContent;
-              // 点击今天 → 高亮选中
               if (today) today.click();
               const sel = document.querySelectorAll('.cal-cell.sel').length;
               const dayList = document.querySelectorAll('.cal-memo-head').length;
               document.querySelector('.view-btn[data-view="all"]').click();
               return { cells, hasToday: !!today, title, sel, dayList };
+            })(),
+            // 搜索高亮:输入「冒烟」 → 标题中匹配部分包 .hl(3 条均含「冒烟」)
+            search: (() => {
+              document.querySelector('.view-btn[data-view="all"]').click();
+              const s = document.querySelector('#search');
+              s.value = '冒烟';
+              s.dispatchEvent(new Event('input', { bubbles: true }));
+              const highlights = document.querySelectorAll('.memo-title .hl').length;
+              // Ctrl+F 聚焦搜索
+              const focused = (() => {
+                const ev = new KeyboardEvent('keydown', { key: 'f', ctrlKey: true, bubbles: true });
+                document.dispatchEvent(ev);
+                return document.activeElement === s;
+              })();
+              s.value = '';
+              s.dispatchEvent(new Event('input', { bubbles: true }));
+              return { highlights, ctrlF: focused };
             })(),
           });
         })()`);
@@ -415,10 +436,12 @@ if (process.env.REMINDME_SMOKE === '1') {
         console.log('[smoke] changelog: open=' + parsed.changelog.open, '| items=' + parsed.changelog.items, '| closed=' + parsed.changelog.closed);
         console.log('[smoke] stats: total=' + parsed.stats.total, '| todo=' + parsed.stats.todo, '| repeat=' + parsed.stats.repeat, '| trash=' + parsed.stats.trash);
         console.log('[smoke] calendar: cells=' + parsed.calendar.cells, '| today=' + parsed.calendar.hasToday, '| sel=' + parsed.calendar.sel, '| dayList=' + parsed.calendar.dayList);
+        console.log('[smoke] search: highlights=' + parsed.search.highlights, '| ctrlF=' + parsed.search.ctrlF);
         const pass = parsed.memoNodes === 3 && parsed.overdue === 1 && parsed.stat.includes('3')
           && parsed.changelog.open && parsed.changelog.items >= 3 && parsed.changelog.closed
           && parsed.stats.total === '3' && parsed.stats.todo === '3' && parsed.stats.repeat === '1'
-          && parsed.calendar.cells >= 28 && parsed.calendar.hasToday && parsed.calendar.sel >= 1 && parsed.calendar.dayList === 1;
+          && parsed.calendar.cells >= 28 && parsed.calendar.hasToday && parsed.calendar.sel >= 1 && parsed.calendar.dayList === 1
+          && parsed.search.highlights >= 3 && parsed.search.ctrlF;
         console.log(pass ? '[smoke] OK' : '[smoke] FAIL: 渲染结果不符合预期');
         app.exit(pass ? 0 : 1);
       } catch (e) {
