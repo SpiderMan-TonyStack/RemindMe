@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' remindme-img: data:">
+<title>RemindMe 备忘录</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+<div id="app">
+
+  <!-- 顶栏 -->
+  <header class="topbar">
+    <div class="brand"><span class="logo">✓</span> RemindMe<span class="brand-sub">备忘录</span></div>
+    <nav class="views" id="views">
+      <button class="view-btn active" data-view="all">📋 全部</button>
+      <button class="view-btn" data-view="today">⏰ 今天</button>
+      <button class="view-btn" data-view="todo">📅 待办</button>
+      <button class="view-btn" data-view="done">✅ 已完成</button>
+      <button class="view-btn" data-view="trash">🗑 回收站</button>
+    </nav>
+    <div class="top-actions">
+      <input id="search" class="search" type="text" placeholder="搜索备忘…">
+      <button id="btn-theme" class="icon-btn" title="切换主题">🌓</button>
+      <button id="btn-changelog" class="icon-btn" title="更新公告">📢</button>
+      <button id="btn-settings" class="icon-btn" title="设置">⚙️</button>
+    </div>
+  </header>
+
+  <!-- 快速添加 -->
+  <div class="quick-add" id="quick-add">
+    <input id="qa-title" class="qa-title" type="text" placeholder="记下怕忘的事… (回车即存)" maxlength="200">
+    <input id="qa-time" class="qa-time" type="datetime-local">
+    <select id="qa-repeat" class="qa-repeat" title="重复">
+      <option value="none">不重复</option>
+      <option value="daily">每天</option>
+      <option value="weekly">每周</option>
+      <option value="monthly">每月</option>
+      <option value="yearly">每年</option>
+    </select>
+    <select id="qa-priority" class="qa-priority" title="优先级">
+      <option value="0">普通</option>
+      <option value="1">一般</option>
+      <option value="2">重要</option>
+    </select>
+    <button id="qa-pin" class="qa-pin" title="置顶">📌</button>
+    <button id="qa-img" class="qa-pin" title="添加图片">🖼</button>
+    <button id="qa-add" class="qa-add">＋ 记下</button>
+  </div>
+
+  <!-- 快速添加图片预览 -->
+  <div id="qa-previews" class="qa-previews hidden"></div>
+
+  <!-- 列表操作条(已完成/回收站视图) -->
+  <div id="list-actions" class="list-actions hidden">
+    <button id="btn-clear-done" class="btn-mini">🗑 清空已完成</button>
+    <button id="btn-clear-trash" class="btn-mini">🗑 清空回收站</button>
+  </div>
+
+  <!-- 列表 -->
+  <main id="list" class="list"></main>
+
+  <!-- 空状态 -->
+  <div id="empty" class="empty hidden">
+    <div class="empty-icon">📝</div>
+    <div class="empty-title">还没有备忘</div>
+    <div class="empty-sub">在上方输入框记下第一件怕忘的事吧</div>
+  </div>
+
+  <!-- 底部状态栏 -->
+  <footer class="statusbar" id="statusbar">
+    <span id="stat-count">0 条备忘</span>
+    <span class="hint">Ctrl+Shift+M 全局唤起 · 回车即存 · 到点提醒</span>
+  </footer>
+</div>
+
+<!-- 右键菜单 -->
+<div id="ctx-menu" class="ctx-menu hidden"></div>
+
+<!-- 设置弹窗 -->
+<div id="settings-modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span>设置</span>
+      <button id="modal-close" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-row">
+        <label>主题</label>
+        <select id="set-theme">
+          <option value="dark">深色</option>
+          <option value="light">浅色</option>
+          <option value="system">跟随系统</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>开机自启</label>
+        <label class="switch"><input type="checkbox" id="set-autolaunch"><span></span></label>
+      </div>
+      <div class="setting-row">
+        <label>默认提前提醒(分钟)</label>
+        <select id="set-advance">
+          <option value="0">不提前</option>
+          <option value="5">5 分钟</option>
+          <option value="10">10 分钟</option>
+          <option value="15">15 分钟</option>
+          <option value="30">30 分钟</option>
+          <option value="60">60 分钟</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>默认添加时间</label>
+        <input type="time" id="set-defaulttime" value="18:00">
+      </div>
+      <div class="setting-row">
+        <label>提醒音</label>
+        <select id="set-sound">
+          <option value="clear">清脆(默认)</option>
+          <option value="gentle">柔和</option>
+          <option value="none">无声</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>数据导出</label>
+        <div class="export-btns">
+          <button id="export-json" class="btn-mini">导出 JSON</button>
+          <button id="export-csv" class="btn-mini">导出 CSV</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <label>数据安全</label>
+        <span class="muted">数据 100% 存储在本机 · 每次启动自动备份(保留 7 份)</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span>RemindMe v0.4.0 · 极简备忘,到点提醒</span>
+    </div>
+  </div>
+</div>
+
+<!-- 更新公告 -->
+<div id="changelog-modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span>📢 更新公告</span>
+      <button id="changelog-close" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body changelog-body" id="changelog-body"></div>
+    <div class="modal-foot">
+      <span>每次更新都会记录在这里 · RemindMe</span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- 大图查看 -->
+<div id="lightbox" class="lightbox hidden">
+  <div class="lightbox-box">
+    <img id="lb-img" src="" alt="预览">
+    <div class="lightbox-bar">
+      <button id="lb-delete" class="btn-mini danger">🗑 删除此图</button>
+      <button id="lb-close" class="btn-mini">✕ 关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 拖拽图片遮罩 -->
+<div id="drop-overlay" class="drop-overlay hidden">
+  <div class="drop-box">🖼 松开以创建图片备忘</div>
+</div>
+
+<script src="changelog.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

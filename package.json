@@ -1,0 +1,42 @@
+{
+  "name": "remindme",
+  "version": "0.4.0",
+  "description": "极简桌面备忘录:一句话记下待办,到点提醒你",
+  "main": "electron/main.js",
+  "author": "Winking",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.winking.remindme",
+    "productName": "RemindMe",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "RemindMe 备忘录"
+    }
+  }
+}
