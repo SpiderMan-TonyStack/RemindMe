@@ -2,6 +2,12 @@
 
 > 极简桌面备忘录:一句话记下待办,到点提醒你。数据 100% 本地存储,托盘常驻不漏提醒。
 
+## GitHub
+
+- 仓库:https://github.com/SpiderMan-TonyStack/RemindMe
+- 版本标签:`v0.4.0`(当前);历史版本 exe 请见 GitHub Releases
+- 发布约定:每次新功能 → 更新 `renderer/changelog.js` + 升版本号 + 打 tag + 上传 exe
+
 ## 功能
 
 - **快速添加**:顶部输入框 + 默认时间,回车即存(≤5 秒完成)
