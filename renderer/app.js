@@ -845,6 +845,31 @@ function bindEvents() {
     if (r && r.ok) toast('导出成功', r.filePath);
   }));
 
+  // 导入备份:合并(去重) / 替换(覆盖)
+  $('#import-merge').addEventListener('click', () => {
+    api.importData('merge').then((r) => {
+      if (!r || r.canceled) return;
+      if (r.ok) {
+        toast(`合并导入完成:新增 ${r.added} 条,跳过重复 ${r.skipped} 条`);
+        load();
+      } else {
+        toast('导入失败:' + (r.error || '未知错误'));
+      }
+    });
+  });
+  $('#import-replace').addEventListener('click', () => {
+    if (!window.confirm('⚠️ 替换导入将覆盖当前全部备忘!确定继续吗?')) return;
+    api.importData('replace').then((r) => {
+      if (!r || r.canceled) return;
+      if (r.ok) {
+        toast(`替换导入完成:载入 ${r.added} 条备忘`);
+        load();
+      } else {
+        toast('导入失败:' + (r.error || '未知错误'));
+      }
+    });
+  });
+
   // 全局:隐藏右键菜单
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#ctx-menu')) hideCtxMenu();

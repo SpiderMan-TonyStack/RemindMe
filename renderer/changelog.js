@@ -4,6 +4,14 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '0.8.2',
+    date: '2026-08-31',
+    changes: [
+      '新增数据导入:设置中「合并导入 JSON」(重复跳过、新增追加)与「替换导入 JSON」(覆盖全部),配合导出可实现多设备手动同步',
+      '修复导出 JSON/CSV 偶发失败的问题',
+    ],
+  },
+  {
     version: '0.8.1',
     date: '2026-08-31',
     changes: [

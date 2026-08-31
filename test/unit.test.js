@@ -130,6 +130,27 @@ function ok(cond, name) {
   const store3 = new Store(file);
   ok(Array.isArray(store3.listMemos()[0].images), '旧数据无 images 字段时兜底为空数组');
 
+  console.log('— 导入备份 —');
+  const beforeImport = store3.listMemos().length;
+  // 合并:重复 id 跳过,新增追加
+  const imp = store3.importData({ memos: [
+    { id: store3.listMemos()[0].id, title: '重复条目(应跳过)', due_at: now, repeat_type: 'none', priority: 0 },
+    { id: 9999, title: '新设备条目', due_at: now + 1000, repeat_type: 'none', priority: 1 },
+  ] }, 'merge');
+  ok(imp.added === 1 && imp.skipped === 1, '合并导入:新增 1 跳过 1');
+  ok(store3.listMemos().length === beforeImport + 1, '合并后总数 +1');
+  ok(store3.listMemos().some((m) => m.title === '新设备条目'), '新条目已加入');
+  ok(!store3.listMemos().some((m) => m.title === '重复条目(应跳过)'), '重复 id 未覆盖原条目');
+  // 替换:覆盖全部
+  const repImp = store3.importData({ memos: [
+    { id: 1, title: '替换后的唯一条目', due_at: now, repeat_type: 'none', priority: 0 },
+  ] }, 'replace');
+  ok(repImp.replaced && repImp.added === 1, '替换导入标记 replaced');
+  ok(store3.listMemos().length === 1 && store3.listMemos()[0].title === '替换后的唯一条目', '替换后仅剩导入条目');
+  // 格式错误
+  const bad = store3.importData({ foo: 1 });
+  ok(bad.error && bad.added === 0, '非法格式返回 error');
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log(`\n共通过 ${passed} 项断言`);
   if (process.exitCode) console.log('存在失败项!');

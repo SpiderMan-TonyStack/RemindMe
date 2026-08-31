@@ -264,6 +264,7 @@ function registerIpc() {
   });
 
   ipcMain.handle('data:export', async (_e, format) => {
+    const memos = store.listMemos().filter((m) => !m.deleted);
     const defaultName = `RemindMe-备份-${new Date().toISOString().slice(0, 10)}.${format === 'csv' ? 'csv' : 'json'}`;
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
       title: '导出备忘',
@@ -294,6 +295,24 @@ function registerIpc() {
       return { ok: true, filePath };
     } catch (e) {
       return { ok: false, error: e.message };
+    }
+  });
+
+  // 导入备份(JSON):merge 合并去重 / replace 替换
+  ipcMain.handle('data:import', async (_e, mode) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      title: mode === 'replace' ? '替换导入(将覆盖当前全部备忘)' : '合并导入(重复跳过,新增追加)',
+      properties: ['openFile'],
+      filters: [{ name: 'JSON 文件', extensions: ['json'] }],
+    });
+    if (canceled || !filePaths || !filePaths.length) return { ok: false, canceled: true };
+    try {
+      const raw = JSON.parse(fs.readFileSync(filePaths[0], 'utf8'));
+      const r = store.importData(raw, mode === 'replace' ? 'replace' : 'merge');
+      if (r.error) return { ok: false, error: r.error };
+      return { ok: true, ...r };
+    } catch (e) {
+      return { ok: false, error: '文件解析失败:' + e.message };
     }
   });
 }

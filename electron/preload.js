@@ -34,8 +34,9 @@ contextBridge.exposeInMainWorld('remindme', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
 
-  // 导出
+  // 导出/导入
   exportData: (format) => ipcRenderer.invoke('data:export', format),
+  importData: (mode) => ipcRenderer.invoke('data:import', mode),
   setTrayTip: (tip) => ipcRenderer.send('tray:set-tip', tip),
 
   // 事件
