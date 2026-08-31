@@ -238,6 +238,33 @@ class Store {
     return before - this.data.memos.length;
   }
 
+  /** 从备份 JSON 导入:合并(默认)跳过重复 id 追加新增;替换直接覆盖 memos */
+  importData(payload, mode = 'merge') {
+    if (!payload || !Array.isArray(payload.memos)) {
+      return { added: 0, skipped: 0, replaced: false, error: '格式错误:缺少 memos 数组' };
+    }
+    const incoming = payload.memos.filter((m) => m && typeof m.id !== 'undefined' && typeof m.title === 'string');
+    if (mode === 'replace') {
+      this.data.memos = incoming.map((m) => ({ images: [], ...m }));
+      const maxId = this.data.memos.reduce((mx, x) => Math.max(mx, Number(x.id) || 0), 0);
+      if (maxId + 1 > this.data.nextId) this.data.nextId = maxId + 1;
+      this.save();
+      return { added: incoming.length, skipped: 0, replaced: true };
+    }
+    const existingIds = new Set(this.data.memos.map((m) => m.id));
+    let added = 0, skipped = 0;
+    for (const m of incoming) {
+      if (existingIds.has(m.id)) { skipped++; continue; }
+      this.data.memos.push({ images: [], ...m });
+      existingIds.add(m.id);
+      added++;
+    }
+    const maxId = this.data.memos.reduce((mx, x) => Math.max(mx, Number(x.id) || 0), 0);
+    if (maxId + 1 > this.data.nextId) this.data.nextId = maxId + 1;
+    this.save();
+    return { added, skipped, replaced: false };
+  }
+
   /** 回收站超期自动清理:删除 deleted_at 超过 maxAgeMs(默认 30 天)的条目 */
   cleanupTrash(maxAgeMs = 30 * 24 * 60 * 60 * 1000) {
     const cutoff = Date.now() - maxAgeMs;

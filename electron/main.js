@@ -264,7 +264,6 @@ function registerIpc() {
   });
 
   ipcMain.handle('data:export', async (_e, format) => {
-    const memos = store.listMemos().filter((m) => !m.deleted);
     const defaultName = `RemindMe-备份-${new Date().toISOString().slice(0, 10)}.${format === 'csv' ? 'csv' : 'json'}`;
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
       title: '导出备忘',
@@ -403,12 +402,16 @@ if (process.env.REMINDME_SMOKE === '1') {
               document.querySelector('.view-btn[data-view="calendar"]').click();
               const cells = document.querySelectorAll('.cal-cell[data-day]').length;
               const today = document.querySelector('.cal-cell.today');
-              const title = document.querySelector('.cal-title').textContent;
+              const dows = document.querySelectorAll('.cal-dow').length;
+              const cellH = today ? today.getBoundingClientRect().height : 0;
+              const overflowX = document.documentElement.scrollWidth > window.innerWidth + 2;
               if (today) today.click();
               const sel = document.querySelectorAll('.cal-cell.sel').length;
               const dayList = document.querySelectorAll('.cal-memo-head').length;
+              const head = document.querySelector('.cal-memo-head');
+              const listVisible = head ? head.getBoundingClientRect().top < window.innerHeight : false;
               document.querySelector('.view-btn[data-view="all"]').click();
-              return { cells, hasToday: !!today, title, sel, dayList };
+              return { cells, hasToday: !!today, dows, cellH: Math.round(cellH), overflowX, sel, dayList, listVisible };
             })(),
             // 搜索高亮:输入「冒烟」 → 标题中匹配部分包 .hl(3 条均含「冒烟」)
             search: (() => {
@@ -435,12 +438,14 @@ if (process.env.REMINDME_SMOKE === '1') {
         console.log('[smoke] stat:', parsed.stat, '| trashEmpty:', parsed.trashEmpty);
         console.log('[smoke] changelog: open=' + parsed.changelog.open, '| items=' + parsed.changelog.items, '| closed=' + parsed.changelog.closed);
         console.log('[smoke] stats: total=' + parsed.stats.total, '| todo=' + parsed.stats.todo, '| repeat=' + parsed.stats.repeat, '| trash=' + parsed.stats.trash);
-        console.log('[smoke] calendar: cells=' + parsed.calendar.cells, '| today=' + parsed.calendar.hasToday, '| sel=' + parsed.calendar.sel, '| dayList=' + parsed.calendar.dayList);
+        console.log('[smoke] calendar: cells=' + parsed.calendar.cells, '| today=' + parsed.calendar.hasToday, '| dows=' + parsed.calendar.dows, '| cellH=' + parsed.calendar.cellH, '| overflowX=' + parsed.calendar.overflowX, '| dayListVisible=' + parsed.calendar.listVisible);
         console.log('[smoke] search: highlights=' + parsed.search.highlights, '| ctrlF=' + parsed.search.ctrlF);
         const pass = parsed.memoNodes === 3 && parsed.overdue === 1 && parsed.stat.includes('3')
           && parsed.changelog.open && parsed.changelog.items >= 3 && parsed.changelog.closed
           && parsed.stats.total === '3' && parsed.stats.todo === '3' && parsed.stats.repeat === '1'
-          && parsed.calendar.cells >= 28 && parsed.calendar.hasToday && parsed.calendar.sel >= 1 && parsed.calendar.dayList === 1
+          && parsed.calendar.cells >= 28 && parsed.calendar.hasToday && parsed.calendar.dows === 7
+          && parsed.calendar.cellH > 0 && parsed.calendar.cellH <= 60 && !parsed.calendar.overflowX
+          && parsed.calendar.sel >= 1 && parsed.calendar.dayList === 1 && parsed.calendar.listVisible
           && parsed.search.highlights >= 3 && parsed.search.ctrlF;
         console.log(pass ? '[smoke] OK' : '[smoke] FAIL: 渲染结果不符合预期');
         app.exit(pass ? 0 : 1);
