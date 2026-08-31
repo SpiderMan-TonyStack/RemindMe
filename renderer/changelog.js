@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '1.4.1',
+    date: '2026-08-31',
+    changes: [
+      '修复编辑弹窗内 Ctrl+V 误触发「粘贴图片快速建备忘」的 bug:焦点在表单字段时让浏览器执行默认粘贴,不再被全局图片拦截',
+    ],
+  },
+  {
     version: '1.4.0',
     date: '2026-08-31',
     changes: [

@@ -639,7 +639,18 @@ async function createFromImageFile(file, source) {
   }
 }
 
+/** 焦点在表单元素时不应拦截剪贴板/拖拽,让浏览器默认粘贴文本 */
+function isInFormField() {
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (el.isContentEditable) return true;
+  return false;
+}
+
 function handleImagePaste(e) {
+  if (isInFormField()) return false; // 焦点在输入框内,让浏览器执行默认粘贴
   const items = e.clipboardData && e.clipboardData.items;
   if (!items) return false;
   for (const item of items) {
