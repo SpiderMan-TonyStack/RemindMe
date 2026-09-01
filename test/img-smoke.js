@@ -61,6 +61,23 @@ app.whenReady().then(() => {
         document.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
         await new Promise((r) => setTimeout(r, 900)); // 等异步创建完成
 
+        // —— 打开编辑弹窗,焦点在内容框,粘贴图片 → 加入当前备忘(而非新建) ——
+        const memo = document.querySelector('.memo');
+        const mr = memo.getBoundingClientRect();
+        memo.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: mr.left + 30, clientY: mr.top + 10 }));
+        const editItem = document.querySelector('.ctx-item[data-cmd="edit"]');
+        if (editItem) editItem.click();
+        await new Promise((r) => setTimeout(r, 300));
+        const imgsBefore = document.querySelectorAll('#edit-images .edit-img').length;
+        document.querySelector('#edit-content').focus();
+        const dt2 = new DataTransfer();
+        dt2.items.add(new File([bytes], 'pasted.png', { type: 'image/png' }));
+        document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt2, bubbles: true, cancelable: true }));
+        await new Promise((r) => setTimeout(r, 900)); // 等图片保存 + 刷新缩略图
+        const imgsAfter = document.querySelectorAll('#edit-images .edit-img').length;
+        const memoCountAfterPaste = document.querySelectorAll('.memo').length;
+        document.querySelector('#edit-cancel').click();
+
         const titles = [...document.querySelectorAll('.memo-title')].map((t) => t.textContent);
         return JSON.stringify({
           thumbs: document.querySelectorAll('.thumb').length,
@@ -71,12 +88,17 @@ app.whenReady().then(() => {
           memoCount: document.querySelectorAll('.memo').length,
           emptyTitles: titles.filter((t) => !t.trim()).length,
           autoTitle: titles.find((t) => t.startsWith('图片备忘')) || '',
+          editImgsBefore: imgsBefore,
+          editImgsAfter: imgsAfter,
+          memoCountAfterPaste,
         });
       })()`);
       const r = JSON.parse(info);
       console.log('[img-smoke] 拖拽前备忘数:', r.memoCount - 1, '| 拖拽后:', r.memoCount, '| 缩略图:', r.thumbs, '| 图片真实加载:', r.loaded, '(宽', r.naturalW, ')');
       console.log('[img-smoke] 自动标题:', JSON.stringify(r.autoTitle), '| memo-main:', r.memoMain, '| 空标题条数:', r.emptyTitles);
-      const pass = r.memoCount === 3 && r.thumbs >= 3 && r.loaded && r.naturalW > 0 && r.memoMain && r.autoTitle.startsWith('图片备忘');
+      console.log('[img-smoke] 编辑内容框粘贴图片: 缩略图', r.editImgsBefore, '→', r.editImgsAfter, '| 备忘数保持', r.memoCountAfterPaste);
+      const pass = r.memoCount === 3 && r.thumbs >= 3 && r.loaded && r.naturalW > 0 && r.memoMain && r.autoTitle.startsWith('图片备忘')
+        && r.editImgsAfter > r.editImgsBefore && r.editImgsBefore >= 1 && r.memoCountAfterPaste === 3;
       console.log(pass ? '[img-smoke] OK:remindme-img:// 协议工作正常' : '[img-smoke] FAIL');
       app.exit(pass ? 0 : 1);
     } catch (e) {

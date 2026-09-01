@@ -655,8 +655,50 @@ function isInFormField() {
   return false;
 }
 
+/** 编辑备忘弹窗打开时:把剪贴板图片加入当前编辑的备忘(内容框 Ctrl+V 可直接贴图) */
+async function pasteImagesToEdit(e) {
+  if (!state_edit.id) return false;
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return false;
+  const files = [];
+  for (const item of items) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const f = item.getAsFile();
+      if (f) files.push(f);
+    }
+  }
+  if (!files.length) return false; // 非图片剪贴板:不拦截,走浏览器默认粘贴
+  e.preventDefault();
+  let added = 0;
+  for (const f of files) {
+    try {
+      const buf = await f.arrayBuffer();
+      if (!buf || !buf.byteLength) continue;
+      const r = await api.saveImageBuffer(buf, f.type || 'image/png');
+      if (r && r.ok) {
+        await api.addImages(state_edit.id, [r.name]);
+        added++;
+      }
+    } catch (err) {
+      console.error('[renderer] 粘贴图片到编辑备忘失败:', err);
+    }
+  }
+  if (added) {
+    toast(`已粘贴 ${added} 张图片到备忘`);
+    await refreshEditImages();
+  }
+  return true;
+}
+
 function handleImagePaste(e) {
-  if (isInFormField()) return false; // 焦点在输入框内,让浏览器执行默认粘贴
+  if (isInFormField()) {
+    // 编辑备忘弹窗打开时,焦点在表单内粘贴图片 → 加入当前备忘(替代无效的文本粘贴)
+    if (state_edit.id) {
+      pasteImagesToEdit(e);
+      return true;
+    }
+    return false; // 其它输入框:让浏览器执行默认粘贴文本
+  }
   const items = e.clipboardData && e.clipboardData.items;
   if (!items) return false;
   for (const item of items) {
