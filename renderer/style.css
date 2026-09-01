@@ -513,6 +513,11 @@ body[data-theme="light"] .stat-item b { color: var(--accent); }
   font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;
   padding: 0 3px;
 }
+/* 有备忘的日期:数字下方小圆点,一眼区分有无事件 */
+.cal-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); margin-top: 3px; flex-shrink: 0;
+}
 .cal-memo-head {
   font-size: 13px; font-weight: 700; color: var(--text);
   padding: 16px 2px 8px;

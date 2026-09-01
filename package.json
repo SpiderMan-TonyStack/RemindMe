@@ -1,6 +1,6 @@
 {
   "name": "remindme",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "极简桌面备忘录:一句话记下待办,到点提醒你",
   "main": "electron/main.js",
   "author": "Winking",

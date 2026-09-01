@@ -192,6 +192,7 @@ function renderCalendar() {
     if (counts[key]) cls.push('has');
     html += `<div class="${cls.join(' ')}" data-day="${key}">
       <span class="cal-day-n">${d}</span>
+      ${counts[key] ? `<span class="cal-dot"></span>` : ''}
       ${counts[key] ? `<span class="cal-badge">${counts[key]}</span>` : ''}
     </div>`;
   }
