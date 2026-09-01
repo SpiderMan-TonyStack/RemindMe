@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '1.4.4',
+    date: '2026-09-01',
+    changes: [
+      '修复日历行高不一致 bug:星期表头从日期网格中移出(独立的 .cal-dows 行),日期网格加 grid-auto-rows: 44px 强制每行精确 44px,空单元格不再导致首末行塌陷/拉伸,各周之间间距均匀',
+    ],
+  },
+  {
     version: '1.4.3',
     date: '2026-08-31',
     changes: [

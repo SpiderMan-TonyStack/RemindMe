@@ -171,6 +171,7 @@ function renderCalendar() {
     if (memo.due_at < nowMs) overdueDays.add(k);
   }
 
+  const dows = ['日', '一', '二', '三', '四', '五', '六'].map((w) => `<div class="cal-dow">${w}</div>`).join('');
   let html = `
     <div class="cal-wrap">
     <div class="cal-bar">
@@ -179,8 +180,8 @@ function renderCalendar() {
       <button class="cal-nav" id="cal-next" title="下月">▶</button>
       <button class="cal-today-btn" id="cal-today">今天</button>
     </div>
-    <div class="cal-grid">
-      ${['日', '一', '二', '三', '四', '五', '六'].map((w) => `<div class="cal-dow">${w}</div>`).join('')}`;
+    <div class="cal-dows">${dows}</div>
+    <div class="cal-grid">`;
   for (let i = 0; i < startDow; i++) html += '<div class="cal-cell empty"></div>';
   for (let d = 1; d <= daysInMonth; d++) {
     const key = `${y}-${pad(m + 1)}-${pad(d)}`;
