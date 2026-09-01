@@ -160,15 +160,15 @@ function renderCalendar() {
   const startDow = first.getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-  // 每天备忘数 + 过期标记(未完成)
+  // 每天备忘数(包含已完成,只过滤已删除) + 过期标记(仅未完成)
   const counts = {};
   const overdueDays = new Set();
   const nowMs = Date.now();
   for (const memo of state.memos) {
-    if (memo.deleted || memo.done) continue;
+    if (memo.deleted) continue;
     const k = dateKey(memo.due_at);
     counts[k] = (counts[k] || 0) + 1;
-    if (memo.due_at < nowMs) overdueDays.add(k);
+    if (!memo.done && memo.due_at < nowMs) overdueDays.add(k);
   }
 
   const dows = ['日', '一', '二', '三', '四', '五', '六'].map((w) => `<div class="cal-dow">${w}</div>`).join('');
