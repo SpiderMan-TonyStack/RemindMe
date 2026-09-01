@@ -172,6 +172,7 @@ function renderCalendar() {
   }
 
   let html = `
+    <div class="cal-wrap">
     <div class="cal-bar">
       <button class="cal-nav" id="cal-prev" title="上月">◀</button>
       <span class="cal-title">${y} 年 ${m + 1} 月</span>
@@ -199,6 +200,7 @@ function renderCalendar() {
   const dayMemos = memosOfDay(state.calDate);
   html += `<div class="cal-memo-head">📌 ${fmtDayTitle(state.calDate)} · ${dayMemos.length} 条备忘</div>`;
   html += dayMemos.map(memoHtml).join('') || '<div class="cal-empty">当天没有备忘,在上方记一条吧</div>';
+  html += '</div>'; // 关闭 .cal-wrap
 
   el.innerHTML = html;
   $('#stat-count').textContent = `${state.memos.filter((m) => !m.deleted && !m.done).length} 条待办`;
@@ -812,15 +814,20 @@ function toast(text, sub) {
 
 // ---------- 事件绑定 ----------
 function bindEvents() {
-  // 视图切换
+  // 视图切换(统一入口:同步导航栏与顶栏日历图标高亮)
+  const calBtn = $('#btn-calendar');
+  function setView(view) {
+    state.view = view;
+    document.querySelectorAll('#views .view-btn').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
+    if (calBtn) calBtn.classList.toggle('active', view === 'calendar');
+    render();
+  }
   $('#views').addEventListener('click', (e) => {
     const btn = e.target.closest('.view-btn');
     if (!btn) return;
-    state.view = btn.dataset.view;
-    document.querySelectorAll('.view-btn').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    render();
+    setView(btn.dataset.view);
   });
+  if (calBtn) calBtn.addEventListener('click', () => setView('calendar'));
 
   // 搜索
   $('#search').addEventListener('input', (e) => {
@@ -1027,8 +1034,8 @@ function bindEvents() {
   api.onFocusMemo((id) => {
     const m = state.memos.find((mm) => mm.id === id);
     if (m && m.deleted) {
-      state.view = 'trash';
-      document.querySelectorAll('.view-btn').forEach((b) => b.classList.toggle('active', b.dataset.view === 'trash'));
+      setView('trash');
+      return;
     }
     render();
   });

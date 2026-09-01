@@ -107,6 +107,7 @@ input, select, button, textarea {
   transition: all .15s; display: flex; align-items: center; justify-content: center;
 }
 .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+.icon-btn.active { border-color: var(--accent); color: var(--accent); background: var(--card); }
 
 /* ===== 快速添加 ===== */
 .quick-add {
@@ -468,11 +469,14 @@ body[data-theme="light"] .stat-item b { color: var(--accent); }
 .edit-imgs img:not(.no-zoom):hover { filter: brightness(.92); }
 
 /* 日历视图 */
+.cal-wrap {
+  max-width: 720px; width: 100%; margin: 0 auto;
+}
 .cal-bar {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   padding: 6px 2px 12px;
 }
-.cal-title { font-size: 16px; font-weight: 700; color: var(--text); flex: 1; text-align: center; }
+.cal-title { font-size: 16px; font-weight: 700; color: var(--text); flex: 1 1 auto; min-width: 130px; text-align: center; }
 .cal-nav, .cal-today-btn {
   border: 1px solid var(--border); background: var(--card-2); color: var(--text-2);
   border-radius: 7px; padding: 4px 12px; font-size: 13px; cursor: pointer; transition: all .15s;
@@ -481,7 +485,7 @@ body[data-theme="light"] .stat-item b { color: var(--accent); }
 .cal-grid {
   display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px;
   background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px;
-  max-width: 720px; /* 限制日历总宽,窄窗口不溢出、宽窗口不至于过大 */
+  width: 100%;
 }
 .cal-dow {
   text-align: center; font-size: 11px; color: var(--text-3);
@@ -512,4 +516,10 @@ body[data-theme="light"] .stat-item b { color: var(--accent); }
 .cal-empty {
   text-align: center; color: var(--text-3); font-size: 13px;
   padding: 26px 0; border: 1px dashed var(--border); border-radius: 10px;
+}
+/* 窄窗口:日历单元格自适应缩小,避免溢出 */
+@media (max-width: 560px) {
+  .cal-cell { height: 40px; font-size: 11.5px; }
+  .cal-badge { min-width: 12px; height: 12px; font-size: 8px; }
+  .cal-title { font-size: 15px; }
 }

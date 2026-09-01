@@ -551,7 +551,7 @@ if (process.env.REMINDME_SMOKE === '1') {
             })(),
             // 日历视图:切换 → 网格存在(≥28 格) + 今天高亮 + 点击选中日期
             calendar: (() => {
-              document.querySelector('.view-btn[data-view="calendar"]').click();
+              document.querySelector('#btn-calendar').click();
               const cells = document.querySelectorAll('.cal-cell[data-day]').length;
               const today = document.querySelector('.cal-cell.today');
               const dows = document.querySelectorAll('.cal-dow').length;
