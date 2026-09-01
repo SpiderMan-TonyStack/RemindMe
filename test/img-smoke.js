@@ -105,6 +105,9 @@ app.whenReady().then(() => {
         const specialLbSrc = document.querySelector('#lb-img').getAttribute('src');
         document.querySelector('#lb-close').click();
         document.querySelector('#edit-cancel').click();
+        // 等异步事件循环:检测关闭 lightbox 时是否误报「图片加载失败」toast
+        await new Promise((r) => setTimeout(r, 600));
+        const errorToast = [...document.querySelectorAll('#toast-container')].some((c) => c.textContent.includes('图片加载失败'));
 
         const titles = [...document.querySelectorAll('.memo-title')].map((t) => t.textContent);
         return JSON.stringify({
@@ -128,6 +131,7 @@ app.whenReady().then(() => {
           specialLbNatW,
           specialLbSrc,
           specialThumbSrc,
+          errorToast,
         });
       })()`);
       const r = JSON.parse(info);
@@ -136,9 +140,11 @@ app.whenReady().then(() => {
       console.log('[img-smoke] 编辑内容框粘贴图片: 缩略图', r.editImgsBefore, '→', r.editImgsAfter, '| 备忘数保持', r.memoCountAfterPaste);
       console.log('[img-smoke] 双击图片 lightbox: hidden=' + r.lbHidden + ' | src=' + r.lbSrc + ' | naturalW=' + r.lbNatW + ' | thumbSrc=' + r.thumbSrc + ' | datasetImg=' + r.datasetImg);
       console.log('[img-smoke] 特殊字符文件名 lightbox: hidden=' + r.specialLbHidden + ' | src=' + r.specialLbSrc + ' | naturalW=' + r.specialLbNatW + ' | thumbSrc=' + r.specialThumbSrc);
+      console.log('[img-smoke] 关闭 lightbox 后误报 toast:', r.errorToast ? '是(BUG)' : '否');
       const pass = r.memoCount === 3 && r.thumbs >= 3 && r.loaded && r.naturalW > 0 && r.memoMain && r.autoTitle.startsWith('图片备忘')
         && r.editImgsAfter > r.editImgsBefore && r.editImgsBefore >= 1 && r.memoCountAfterPaste === 3
-        && !r.specialLbHidden && r.specialLbNatW > 0 && r.specialLbSrc === r.specialThumbSrc;
+        && !r.specialLbHidden && r.specialLbNatW > 0 && r.specialLbSrc === r.specialThumbSrc
+        && !r.errorToast;
       console.log(pass ? '[img-smoke] OK:remindme-img:// 协议工作正常' : '[img-smoke] FAIL');
       app.exit(pass ? 0 : 1);
     } catch (e) {

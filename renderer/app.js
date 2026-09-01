@@ -620,7 +620,9 @@ function openLightbox(memoId, nameOrSrc) {
 
 function closeLightbox() {
   $('#lightbox').classList.add('hidden');
-  $('#lb-img').src = '';
+  const lb = $('#lb-img');
+  lb.onerror = null; // 关键:清掉 onerror,避免 src='' 被 Chromium 当作加载中断而触发误报 toast
+  lb.src = '';
 }
 
 async function deleteLightboxImage() {

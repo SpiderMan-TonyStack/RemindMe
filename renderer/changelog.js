@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '1.4.10',
+    date: '2026-09-01',
+    changes: [
+      '修复关闭图片大图后误报「图片加载失败」:closeLightbox 清空图片 src 前先清掉 onerror(Chromium 会把加载被中断视为失败,残留的 onerror 会触发误报),只在 openLightbox 真正加载图片时才监听失败',
+    ],
+  },
+  {
     version: '1.4.9',
     date: '2026-09-01',
     changes: [
