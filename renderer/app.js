@@ -67,7 +67,9 @@ async function load() {
   applyTheme(settings.theme, settings.accent);
   $('#set-theme').value = settings.theme;
   $('#set-accent').value = settings.accent || 'green';
-  $('#set-autolaunch').checked = !!settings.autoLaunch;
+  $('#set-autolaunch').checked = settings.autoLaunchActual !== undefined
+    ? !!settings.autoLaunchActual
+    : !!settings.autoLaunch;
   $('#set-advance').value = String(settings.defaultAdvance);
   $('#set-defaulttime').value = settings.defaultTime;
   $('#set-sound').value = settings.sound || 'clear';

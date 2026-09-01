@@ -7,6 +7,7 @@
 const { app, BrowserWindow, Tray, Menu, Notification, ipcMain, globalShortcut, nativeImage, dialog, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { spawnSync } = require('child_process');
 const { Store, REPEAT_NONE } = require('./store');
 const { makeAppIcon, makeTrayIcon } = require('./icon');
 const { webdavPut, webdavGet, webdavTest } = require('./webdav');
@@ -128,8 +129,92 @@ function quickAdd() {
 }
 
 // ---------- 开机自启 ----------
+// Electron 的 setLoginItemSettings 在 Windows 上依赖 exe 路径精确匹配,
+// 换版本/换路径后旧项可能残留 → 这里对「注册表 + 启动文件夹 + RunOnce」做全面清理兜底。
+const WIN_REG_KEY = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run';
+const WIN_REG_KEY_LM = 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run';
+const WIN_REG_RUNONCE = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce';
+
+/** 列出注册表中所有与 RemindMe 相关的启动项值名(值名或数据命中即算) */
+function listRegLaunchNames(key) {
+  const r = spawnSync('reg', ['query', key], { windowsHide: true, encoding: 'utf8' });
+  if (r.status !== 0 || !r.stdout) return [];
+  const names = [];
+  for (const line of r.stdout.split(/\r?\n/)) {
+    const m = line.match(/^\s+(.+?)\s+REG_\w+\s+(.*)$/);
+    if (m && /remindme/i.test(`${m[1]} ${m[2]}`)) names.push(m[1].trim());
+  }
+  return names;
+}
+
+/** 清理指定注册表键下所有 RemindMe 启动项,返回清除数量 */
+function cleanRegLaunch(key) {
+  let n = 0;
+  for (const name of listRegLaunchNames(key)) {
+    const r = spawnSync('reg', ['delete', key, '/v', name, '/f'], { windowsHide: true });
+    if (r.status === 0) n++;
+  }
+  return n;
+}
+
+/** 清理「启动」文件夹中的 RemindMe 快捷方式,返回清除数量 */
+function cleanStartupFolder() {
+  let dir = '';
+  try { dir = app.getPath('startup'); } catch (e) { return 0; }
+  if (!dir || !fs.existsSync(dir)) return 0;
+  let n = 0;
+  try {
+    for (const f of fs.readdirSync(dir)) {
+      if (/remindme/i.test(f)) {
+        fs.unlinkSync(path.join(dir, f));
+        n++;
+      }
+    }
+  } catch (e) { /* 忽略无权限等情况 */ }
+  return n;
+}
+
+/** 查询注册表启动项是否存在 */
+function registryHasLaunchItem() {
+  if (process.platform !== 'win32') return null;
+  if (listRegLaunchNames(WIN_REG_KEY).length) return true;
+  if (listRegLaunchNames(WIN_REG_KEY_LM).length) return true;
+  return false;
+}
+
+/** 全面清理所有位置的开机自启项,返回各位置清除数量 */
+function cleanAllLaunchItems() {
+  if (process.platform !== 'win32') return { reg: 0, regLm: 0, runOnce: 0, startup: 0 };
+  return {
+    reg: cleanRegLaunch(WIN_REG_KEY),
+    regLm: cleanRegLaunch(WIN_REG_KEY_LM),
+    runOnce: cleanRegLaunch(WIN_REG_RUNONCE),
+    startup: cleanStartupFolder(),
+  };
+}
+
 function applyAutoLaunch(enabled) {
-  app.setLoginItemSettings({ openAtLogin: enabled });
+  // 开发/冒烟测试环境不操作系统自启项,避免把 electron.exe 写进用户开机启动
+  if (!app.isPackaged || process.env.REMINDME_SMOKE === '1') return;
+  app.setLoginItemSettings({ openAtLogin: !!enabled });
+  if (process.platform === 'win32') {
+    if (enabled) {
+      const r = spawnSync('reg', ['add', WIN_REG_KEY, '/v', 'RemindMe', '/t', 'REG_SZ', '/d', `"${process.execPath}"`, '/f'], { windowsHide: true });
+      if (r.status !== 0) console.warn('[main] 开机自启写入失败');
+    } else {
+      const cleaned = cleanAllLaunchItems();
+      const total = cleaned.reg + cleaned.regLm + cleaned.runOnce + cleaned.startup;
+      if (total > 0) console.log(`[main] 已清理残留自启项 ${total} 处`, cleaned);
+    }
+  }
+}
+
+/** 系统真实的开机自启状态(Electron API + 注册表双重确认) */
+function getAutoLaunchActual() {
+  let electronVal = false;
+  try { electronVal = !!app.getLoginItemSettings().openAtLogin; } catch (e) { /* 忽略 */ }
+  if (process.platform !== 'win32') return electronVal;
+  return electronVal || !!registryHasLaunchItem();
 }
 
 // ---------- 提醒调度 ----------
@@ -253,7 +338,8 @@ function registerIpc() {
     return m;
   });
 
-  ipcMain.handle('settings:get', () => store.getSettings());
+  // 附带 autoLaunchActual(系统真实自启状态),便于 UI 与系统对齐
+  ipcMain.handle('settings:get', () => ({ ...store.getSettings(), autoLaunchActual: getAutoLaunchActual() }));
   ipcMain.handle('settings:set', (_e, patch) => {
     const s = store.setSettings(patch);
     if ('autoLaunch' in patch) applyAutoLaunch(patch.autoLaunch);
