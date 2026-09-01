@@ -922,6 +922,12 @@ function bindEvents() {
     toast('图片已删除');
     await refreshEditImages();
   });
+  // 编辑弹窗:双击图片查看大图(lightbox)
+  $('#edit-images').addEventListener('dblclick', (e) => {
+    const img = e.target.closest('.edit-img img');
+    if (!img || !state_edit.id) return;
+    openLightbox(state_edit.id, img.dataset.img);
+  });
 
   // 批量操作(清空已完成 / 清空回收站)
   $('#btn-clear-done').addEventListener('click', async () => {

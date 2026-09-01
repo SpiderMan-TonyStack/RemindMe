@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '1.4.8',
+    date: '2026-09-01',
+    changes: [
+      '编辑弹窗图片附件支持双击查看大图:双击缩略图打开 lightbox 预览,大图里的删除按钮可直接删除当前编辑备忘的图片',
+    ],
+  },
+  {
     version: '1.4.7',
     date: '2026-09-01',
     changes: [
