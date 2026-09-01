@@ -598,10 +598,22 @@ function renderQaPreviews() {
 }
 
 // ---------- 图片:大图查看 ----------
-function openLightbox(memoId, name) {  state.lbMemoId = memoId;
+function openLightbox(memoId, nameOrSrc) {
+  // 兼容两种入参:纯文件名(自动包 remindme-img: 协议) 或 已构建好的完整 src
+  // 双击编辑弹窗图片时直接传 src,避免 dataset.img 重编码导致的 URL 漂移
+  let url, name;
+  if (typeof nameOrSrc === 'string' && nameOrSrc.startsWith('remindme-img:')) {
+    url = nameOrSrc;
+    try { name = decodeURIComponent(nameOrSrc.slice('remindme-img:'.length)); }
+    catch { name = nameOrSrc.slice('remindme-img:'.length); }
+  } else {
+    name = nameOrSrc;
+    url = IMG_URL(name);
+  }
+  state.lbMemoId = memoId;
   state.lbName = name;
   const img = $('#lb-img');
-  img.src = IMG_URL(name);
+  img.src = url;
   img.onerror = () => { toast('图片加载失败(文件可能已丢失)'); };
   $('#lightbox').classList.remove('hidden');
 }
@@ -922,11 +934,11 @@ function bindEvents() {
     toast('图片已删除');
     await refreshEditImages();
   });
-  // 编辑弹窗:双击图片查看大图(lightbox)
+  // 编辑弹窗:双击图片查看大图(lightbox),直接复用图片已构建好的 src 避免重编码漂移
   $('#edit-images').addEventListener('dblclick', (e) => {
     const img = e.target.closest('.edit-img img');
     if (!img || !state_edit.id) return;
-    openLightbox(state_edit.id, img.dataset.img);
+    openLightbox(state_edit.id, img.getAttribute('src'));
   });
 
   // 批量操作(清空已完成 / 清空回收站)

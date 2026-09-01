@@ -4,6 +4,13 @@
  */
 window.REMINDME_CHANGELOG = [
   {
+    version: '1.4.9',
+    date: '2026-09-01',
+    changes: [
+      '修复双击编辑弹窗图片附件出现「图片加载失败」误报:openLightbox 直接复用图片元素已构建好的 src(原用 dataset.img 重新 IMG_URL,在含 +/%/空格等特殊字符的文件名下可能产生与缩略图不一致的 URL 导致 onerror),双击时 lightbox 与缩略图加载完全相同的 URL,绝不会再误报',
+    ],
+  },
+  {
     version: '1.4.8',
     date: '2026-09-01',
     changes: [

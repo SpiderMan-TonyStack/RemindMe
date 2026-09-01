@@ -5,7 +5,7 @@
 ## GitHub
 
 - 仓库:https://github.com/SpiderMan-TonyStack/RemindMe
-- 版本标签:`v1.4.8`(当前);历史版本 exe 请见 GitHub Releases
+- 版本标签:`v1.4.9`(当前);历史版本 exe 请见 GitHub Releases
 - 发布约定:每次新功能 → 更新 `renderer/changelog.js` + 升版本号 + 打 tag + 上传 exe
 
 ## 功能
