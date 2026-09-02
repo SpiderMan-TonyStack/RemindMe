@@ -371,6 +371,7 @@ body[data-theme="light"] .setting-row select, body[data-theme="light"] .setting-
   position: fixed; inset: 0; background: rgba(0,0,0,.78); z-index: 1500;
   display: flex; align-items: center; justify-content: center;
   animation: lb-in .18s ease;
+  overflow: auto; /* 滚轮放大后可滚动查看细节 */
 }
 @keyframes lb-in { from { opacity: 0; } to { opacity: 1; } }
 .lightbox-box {
@@ -381,6 +382,9 @@ body[data-theme="light"] .setting-row select, body[data-theme="light"] .setting-
   max-width: 88vw; max-height: 76vh; border-radius: 10px;
   border: 1px solid var(--border); object-fit: contain;
   box-shadow: 0 12px 48px rgba(0,0,0,.6);
+  transform-origin: center center; /* 滚轮缩放以中心为原点 */
+  transition: transform .12s ease-out;
+  will-change: transform;
 }
 .lightbox-bar { display: flex; gap: 10px; }
 .btn-mini.danger:hover { border-color: var(--danger); color: var(--danger); }

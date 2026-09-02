@@ -103,7 +103,18 @@ app.whenReady().then(() => {
         const specialLbHidden = document.querySelector('#lightbox').classList.contains('hidden');
         const specialLbNatW = document.querySelector('#lb-img').naturalWidth;
         const specialLbSrc = document.querySelector('#lb-img').getAttribute('src');
+        // —— 滚轮缩放:上滚放大 / 下滚缩小 / 关闭后重置 ——
+        const lbImgEl = document.querySelector('#lb-img');
+        const zoomBefore = lbImgEl.style.transform || '(none)';
+        lbImgEl.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }));
+        await new Promise((r) => setTimeout(r, 200));
+        const zoomIn = lbImgEl.style.transform;
+        lbImgEl.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }));
+        await new Promise((r) => setTimeout(r, 200));
+        const zoomOut = lbImgEl.style.transform;
         document.querySelector('#lb-close').click();
+        await new Promise((r) => setTimeout(r, 200));
+        const zoomAfterClose = lbImgEl.style.transform;
         document.querySelector('#edit-cancel').click();
         // 等异步事件循环:检测关闭 lightbox 时是否误报「图片加载失败」toast
         await new Promise((r) => setTimeout(r, 600));
@@ -132,6 +143,10 @@ app.whenReady().then(() => {
           specialLbSrc,
           specialThumbSrc,
           errorToast,
+          zoomBefore,
+          zoomIn,
+          zoomOut,
+          zoomAfterClose,
         });
       })()`);
       const r = JSON.parse(info);
@@ -141,10 +156,12 @@ app.whenReady().then(() => {
       console.log('[img-smoke] 双击图片 lightbox: hidden=' + r.lbHidden + ' | src=' + r.lbSrc + ' | naturalW=' + r.lbNatW + ' | thumbSrc=' + r.thumbSrc + ' | datasetImg=' + r.datasetImg);
       console.log('[img-smoke] 特殊字符文件名 lightbox: hidden=' + r.specialLbHidden + ' | src=' + r.specialLbSrc + ' | naturalW=' + r.specialLbNatW + ' | thumbSrc=' + r.specialThumbSrc);
       console.log('[img-smoke] 关闭 lightbox 后误报 toast:', r.errorToast ? '是(BUG)' : '否');
+      console.log('[img-smoke] 滚轮缩放: 初始=' + r.zoomBefore + ' | 上滚放大=' + r.zoomIn + ' | 下滚缩小=' + r.zoomOut + ' | 关闭后重置=' + (r.zoomAfterClose || '(空)'));
       const pass = r.memoCount === 3 && r.thumbs >= 3 && r.loaded && r.naturalW > 0 && r.memoMain && r.autoTitle.startsWith('图片备忘')
         && r.editImgsAfter > r.editImgsBefore && r.editImgsBefore >= 1 && r.memoCountAfterPaste === 3
         && !r.specialLbHidden && r.specialLbNatW > 0 && r.specialLbSrc === r.specialThumbSrc
-        && !r.errorToast;
+        && !r.errorToast
+        && r.zoomIn.includes('1.2') && r.zoomOut.includes('scale(1)') && !r.zoomAfterClose;
       console.log(pass ? '[img-smoke] OK:remindme-img:// 协议工作正常' : '[img-smoke] FAIL');
       app.exit(pass ? 0 : 1);
     } catch (e) {

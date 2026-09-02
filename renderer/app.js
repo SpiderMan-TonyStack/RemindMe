@@ -19,6 +19,7 @@ const state = {
   pendingImages: [],  // 快速添加待保存的图片文件名
   lbMemoId: null,     // 大图查看所属备忘 id
   lbName: '',         // 大图当前文件名
+  lbZoom: 1,          // 大图缩放比例(滚轮控制)
   calYear: 0,         // 日历视图:显示年月
   calMonth: -1,       // 0-11
   calDate: '',        // 选中日期 'YYYY-MM-DD'
@@ -26,6 +27,9 @@ const state = {
 
 // 非 standard 自定义协议:URL 用 remindme-img:<文件名> 形式(避免 // 被解析为 host)
 const IMG_URL = (name) => 'remindme-img:' + encodeURIComponent(name);
+
+// 大图查看:滚轮缩放范围与步长
+const LB_ZOOM_MIN = 0.3, LB_ZOOM_MAX = 5, LB_ZOOM_STEP = 0.2;
 
 // ---------- 工具 ----------
 const $ = (sel) => document.querySelector(sel);
@@ -612,8 +616,10 @@ function openLightbox(memoId, nameOrSrc) {
   }
   state.lbMemoId = memoId;
   state.lbName = name;
+  state.lbZoom = 1; // 重置缩放
   const img = $('#lb-img');
   img.src = url;
+  img.style.transform = '';
   img.onerror = () => { toast('图片加载失败(文件可能已丢失)'); };
   $('#lightbox').classList.remove('hidden');
 }
@@ -623,6 +629,8 @@ function closeLightbox() {
   const lb = $('#lb-img');
   lb.onerror = null; // 关键:清掉 onerror,避免 src='' 被 Chromium 当作加载中断而触发误报 toast
   lb.src = '';
+  lb.style.transform = '';
+  state.lbZoom = 1;
 }
 
 async function deleteLightboxImage() {
@@ -907,6 +915,17 @@ function bindEvents() {
   $('#lightbox').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeLightbox();
   });
+  // 大图查看:滚轮缩放(上滚放大 / 下滚缩小,0.3x ~ 5x)
+  $('#lightbox').addEventListener('wheel', (e) => {
+    if ($('#lightbox').classList.contains('hidden')) return;
+    e.preventDefault();
+    const dir = e.deltaY < 0 ? 1 : -1; // 上滚放大,下滚缩小
+    const next = Math.min(LB_ZOOM_MAX, Math.max(LB_ZOOM_MIN, state.lbZoom + dir * LB_ZOOM_STEP));
+    if (next === state.lbZoom) return;
+    state.lbZoom = next;
+    const lb = $('#lb-img');
+    lb.style.transform = `scale(${next})`;
+  }, { passive: false });
 
   // 编辑备忘
   $('#edit-close').addEventListener('click', closeEdit);
